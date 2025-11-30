@@ -1,5 +1,12 @@
 import mongoose from "mongoose";
 
+const dailyStatsSchema = new mongoose.Schema({
+  date: { type: String, required: true }, // YYYY-MM-DD
+  cigarettesAvoided: { type: Number, default: 0 },
+  moneySaved: { type: Number, default: 0 },
+  goalsCompleted: { type: Number, default: 0 },
+});
+
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
@@ -10,7 +17,17 @@ const userSchema = new mongoose.Schema(
     heightCm: { type: Number },
     weightKg: { type: Number },
 
-    plan: { type: String, enum: ["gradual", "aggressive"], default: "gradual" },
+    // For now planType = A; later ML can change this
+    plan: { type: String, enum: ["gradual", "aggressive", "A"], default: "A" },
+
+    // Dashboard / progress fields
+    streak: { type: Number, default: 0 },                // total "perfect goal" days
+    lastStreakUpdateDate: { type: String, default: null }, // last date streak incremented
+
+    puffCoins: { type: Number, default: 0 },             // gamified currency
+    totalRelapses: { type: Number, default: 0 },         // for SOS later
+
+    dailyStats: [dailyStatsSchema],                      // per-day stats
   },
   { timestamps: true }
 );

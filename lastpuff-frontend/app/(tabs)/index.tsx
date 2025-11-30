@@ -1,18 +1,43 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 import Shine from '../../components/Shine';
 import { AuthContext } from '../../context/AuthContext';
+import { fetchDashboardSummary } from '../../services/api';
+import { router } from "expo-router";
 
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen() {
   const auth: any = useContext(AuthContext);
-  const userName = auth?.user?.name || 'User';
+  const userName = auth?.user?.name || 'Player';
+
+  const [dashboard, setDashboard] = useState<any>(null);
+  const [loadingDashboard, setLoadingDashboard] = useState<boolean>(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetchDashboardSummary();
+        setDashboard(res.data);
+      } catch (err) {
+        console.log("Failed to load dashboard summary", err);
+      } finally {
+        setLoadingDashboard(false);
+      }
+    };
+    load();
+  }, []);
+
+  const cigsToday = dashboard?.today?.cigarettesAvoided ?? 0;
+  const moneyToday = dashboard?.today?.moneySaved ?? 0;
+  const goalsToday = dashboard?.today?.goalsCompleted ?? 0;
+  const streak = dashboard?.streak ?? 0;
+  const puffCoins = dashboard?.puffCoins ?? 0;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -20,14 +45,12 @@ export default function HomeScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        {/* <Text style={styles.headerTitle}>Hi, {userName}</Text> */}
-        {!auth?.user?.name ? (
-  <Text style={[styles.headerTitle, { opacity: 0.3 }]}>Hi, ...</Text>
-) : (
-  <Text style={styles.headerTitle}>Hi, {auth.user.name}</Text>
-)}
-
+        <Text style={styles.headerTitle}>Hi, {userName}</Text>
         <View style={styles.headerIcons}>
+          <View style={styles.coinsBadge}>
+            <Ionicons name="logo-bitcoin" size={16} color="#000000" />
+            <Text style={styles.coinsText}>{puffCoins}</Text>
+          </View>
           <Ionicons name="notifications-outline" size={24} color="#fff" style={styles.headerIcon} />
           <Ionicons name="settings-outline" size={24} color="#fff" />
         </View>
@@ -38,13 +61,17 @@ export default function HomeScreen() {
         <View style={styles.topStatsContainer}>
           <View style={styles.statsCard}>
             <Text style={styles.statsLabel}>Cigarettes Avoided Today</Text>
-            <Text style={styles.statsValue}>07</Text>
+            <Text style={styles.statsValue}>
+              {loadingDashboard ? "--" : cigsToday.toString().padStart(2, "0")}
+            </Text>
             <Text style={styles.statsSubLabel}>Daily limit: 0/10 cigarettes</Text>
 
             {/* Money Saved - Small rounded tab inside */}
             <View style={styles.moneySavedTab}>
               <Text style={styles.moneySavedTabLabel}>Money Saved Today</Text>
-              <Text style={styles.moneySavedTabValue}>₹198</Text>
+              <Text style={styles.moneySavedTabValue}>
+                {loadingDashboard ? "₹--" : `₹${moneyToday}`}
+              </Text>
             </View>
           </View>
         </View>
@@ -65,7 +92,7 @@ export default function HomeScreen() {
                     strokeWidth="6"
                     fill="none"
                   />
-                  {/* Progress Circle */}
+                  {/* Progress Circle - static visual for now */}
                   <Circle
                     cx="35"
                     cy="35"
@@ -78,7 +105,9 @@ export default function HomeScreen() {
                     strokeLinecap="round"
                   />
                 </Svg>
-                <Text style={styles.streakNumber}>12</Text>
+                <Text style={styles.streakNumber}>
+                  {loadingDashboard ? "--" : streak}
+                </Text>
               </View>
             </View>
             <View style={styles.streakRight}>
@@ -94,7 +123,7 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          {/* Health Impact Section */}
+          {/* Health Impact Section (still static for now) */}
           <View style={styles.healthImpactSection}>
             <View style={styles.healthMainCard}>
               <View style={styles.healthIconContainer}>
@@ -126,12 +155,19 @@ export default function HomeScreen() {
               <Ionicons name="chevron-forward" size={20} color="#888" />
             </TouchableOpacity>
           </Link>
+
           <View style={styles.goalsSectionHeader}>
             <Text style={styles.sectionTitle}>Goals</Text>
             <TouchableOpacity style={styles.addGoalButton}>
               <Text style={styles.addGoalText}>Add Goal</Text>
             </TouchableOpacity>
           </View>
+
+          <Text style={styles.goalsProgressText}>
+            {loadingDashboard
+              ? "Loading today's goals..."
+              : `Completed ${goalsToday} / 5 today`}
+          </Text>
 
           <View style={styles.goalsList}>
             <TouchableOpacity style={styles.goalItem}>
@@ -194,7 +230,27 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* National Impact */}
+
+        {/* SOS Button */}
+<View style={{ marginBottom: 24, marginTop: 10 }}>
+  <TouchableOpacity
+    style={{
+      backgroundColor: '#39FF14',
+      paddingVertical: 16,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}
+    onPress={() => router.push('/sos')}
+  >
+    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#000000' }}>
+      SOS Support
+    </Text>
+  </TouchableOpacity>
+</View>
+
+
+        {/* National Impact (still static for now) */}
         <View style={styles.nationalSection}>
           <Text style={styles.sectionTitle}>National Impact</Text>
           <View style={styles.nationalCardsContainer}>
@@ -215,6 +271,7 @@ export default function HomeScreen() {
           </View>
         </View>
       </ScrollView>
+
       <TouchableOpacity style={styles.fab}>
         <Ionicons name="chatbubble-ellipses-outline" size={28} color="#000000" />
       </TouchableOpacity>
@@ -246,6 +303,21 @@ const styles = StyleSheet.create({
   },
   headerIcon: {
     marginRight: 15,
+  },
+  coinsBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#39FF14',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginRight: 10,
+  },
+  coinsText: {
+    color: '#000000',
+    fontWeight: '600',
+    marginLeft: 4,
+    fontSize: 12,
   },
   scrollView: {
     flex: 1,
@@ -423,12 +495,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#fff',
+  },
+  goalsProgressText: {
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 12,
   },
   addGoalButton: {
     backgroundColor: '#39FF14',
