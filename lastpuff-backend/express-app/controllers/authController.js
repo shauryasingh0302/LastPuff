@@ -79,4 +79,5 @@ export const login = async (req, res) => {
     console.error("Login error:", err);
     return res.status(500).json({ message: "Server error during login" });
   }
+  
 };

@@ -1,6 +1,6 @@
 import React, { useState, useContext } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
-import { API } from "../../services/api";
+import API from "../../services/api";
 import { useRouter } from "expo-router";
 import { AuthContext } from "../../context/AuthContext";
 
@@ -46,11 +46,13 @@ export default function SignupScreen() {
       await auth.loginUser(res.data.user, res.data.token);
       router.replace("/" as any);
     } catch (err: any) {
-      console.log("Signup error:", err.response?.data || err.message);
-      setError(err.response?.data?.message || "Signup failed");
-    } finally {
-      setLoading(false);
-    }
+  console.log("FULL SIGNUP ERROR:", JSON.stringify(err, null, 2));
+  console.log("ERROR RESPONSE:", err.response?.data);
+  setError(err.response?.data?.message || err.message || "Signup failed");
+} finally {
+  setLoading(false);
+}
+
   };
 
   return (

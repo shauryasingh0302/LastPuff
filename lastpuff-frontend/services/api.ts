@@ -1,45 +1,59 @@
 import axios from "axios";
+import { Platform } from "react-native";
 
-const api = axios.create({
-  baseURL: "http://localhost:5000", // your backend base URL
+// ---------------- BASE URL HANDLING ----------------
+let BASE_URL = "http://localhost:5000"; // Default for Web & iOS
+
+if (Platform.OS === "android") {
+  BASE_URL = "http://10.0.2.2:5000"; // Android emulator
+}
+
+// For real physical phone on same WiFi, replace manually with your PC IP
+// BASE_URL = "http://192.168.x.x:5000";
+
+// ---------------- AXIOS INSTANCE ----------------
+const API = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
-// Called from AuthContext to set/remove token
+// ----- TOKEN HANDLING -----
 export const setAuthToken = (token: string | null) => {
   if (token) {
-    api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    API.defaults.headers.common["Authorization"] = `Bearer ${token}`;
   } else {
-    delete api.defaults.headers.common["Authorization"];
+    delete API.defaults.headers.common["Authorization"];
   }
 };
 
-// ---------- Auth APIs ----------
+// ---------- AUTH ----------
 export const login = (email: string, password: string) =>
-  api.post("/auth/login", { email, password });
+  API.post("/auth/login", { email, password });
 
 export const signup = (
   name: string,
   email: string,
   password: string,
   age?: number,
-  heightCm?: number,
-  weightKg?: number
+  height?: number,
+  weight?: number
 ) =>
-  api.post("/auth/signup", {
+  API.post("/auth/signup", {
     name,
     email,
     password,
     age,
-    heightCm,
-    weightKg,
+    height,
+    weight,
   });
 
-// ---------- Dashboard APIs ----------
-
+// ---------- DASHBOARD ----------
 export const fetchDashboardSummary = () =>
-  api.get("/dashboard/summary");
+  API.get("/dashboard/summary");
 
 export const updateDailyGoals = (goalsCompleted: number) =>
-  api.post("/dashboard/update-goals", { goalsCompleted });
+  API.post("/dashboard/update-goals", { goalsCompleted });
 
-export default api;
+export default API;

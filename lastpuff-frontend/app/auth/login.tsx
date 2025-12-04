@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { Link, useRouter } from "expo-router";
-import { API } from "../../services/api";
+import API from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
 
 interface AuthResponse {
