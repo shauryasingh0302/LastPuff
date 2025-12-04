@@ -1,24 +1,31 @@
 import User from "../models/User.js";
 import dayjs from "dayjs";
 
+// ===================== DASHBOARD SUMMARY =====================
 export const getDashboardSummary = async (req, res) => {
   try {
-    const user = req.user;
+    // req.user only contains: { id: userId }
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     const today = dayjs().format("YYYY-MM-DD");
 
-    const todayStats = user.dailyStats.find(stat => stat.date === today) || {
-      cigarettesAvoided: 0,
-      moneySaved: 0,
-      goalsCompleted: 0,
-    };
+    const todayStats =
+      user.dailyStats?.find((stat) => stat.date === today) || {
+        cigarettesAvoided: 0,
+        moneySaved: 0,
+        goalsCompleted: 0,
+      };
 
     return res.status(200).json({
       success: true,
       name: user.name,
-      streak: user.streak,
-      puffCoins: user.puffCoins,
-      totalRelapses: user.totalRelapses,
+      streak: user.streak || 0,
+      puffCoins: user.puffCoins || 0,
+      totalRelapses: user.totalRelapses || 0,
       todayStats,
     });
   } catch (err) {
@@ -27,16 +34,20 @@ export const getDashboardSummary = async (req, res) => {
   }
 };
 
-
+// ===================== GOAL PROGRESS UPDATE =====================
 export const updateGoalProgress = async (req, res) => {
   try {
-    const user = req.user;
     const { goalsCompletedToday } = req.body;
+
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
     const today = dayjs().format("YYYY-MM-DD");
 
-    // Check existing day entry
-    const existingDay = user.dailyStats.find(stat => stat.date === today);
+    const existingDay = user.dailyStats.find((stat) => stat.date === today);
 
     if (existingDay) {
       existingDay.goalsCompleted = goalsCompletedToday;
@@ -49,11 +60,12 @@ export const updateGoalProgress = async (req, res) => {
       });
     }
 
+    // streak update
     if (goalsCompletedToday >= 5) {
       if (user.lastStreakUpdateDate !== today) {
-        user.streak += 1;
+        user.streak = (user.streak || 0) + 1;
         user.lastStreakUpdateDate = today;
-        user.puffCoins += 2; 
+        user.puffCoins = (user.puffCoins || 0) + 2;
       }
     }
 
@@ -64,7 +76,6 @@ export const updateGoalProgress = async (req, res) => {
       streak: user.streak,
       puffCoins: user.puffCoins,
     });
-
   } catch (err) {
     console.error("Update goals error:", err);
     res.status(500).json({ message: "Server error updating goal progress" });
