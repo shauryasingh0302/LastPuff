@@ -1,11 +1,13 @@
 import axios from "axios";
 import { Platform } from "react-native";
+//https://lastpuff-backend.onrender.com
+//http://localhost:5000
 
 // ---------------- BASE URL HANDLING ----------------
-let BASE_URL = "https://lastpuff-backend.onrender.com"; // Default for Web & iOS
+let BASE_URL = "http://localhost:5000"; // Default for Web & iOS
 
 if (Platform.OS === "android") {
-  BASE_URL = "https://lastpuff-backend.onrender.com"; // Android emulator
+  BASE_URL = "http://localhost:5000"; // Android emulator
 }
 
 // For real physical phone on same WiFi, replace manually with your PC IP
