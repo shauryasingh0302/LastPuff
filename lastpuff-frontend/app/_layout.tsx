@@ -5,18 +5,21 @@ import React, { useContext, useEffect } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import 'react-native-reanimated';
 import { AuthProvider, AuthContext } from '../context/AuthContext';
+import { GoalsProvider } from '../context/GoalsContext';
+
+import { LPColors } from '../constants/theme';
 
 // Custom dark theme for LastPuff
 const LastPuffTheme = {
   ...DarkTheme,
   colors: {
     ...DarkTheme.colors,
-    primary: '#39FF14',
-    background: '#000000',
-    card: '#121212',
-    text: '#fff',
-    border: '#39FF14',
-    notification: '#39FF14',
+    primary: LPColors.primary,
+    background: LPColors.bg,
+    card: LPColors.surface,
+    text: LPColors.text,
+    border: LPColors.border,
+    notification: LPColors.primary,
   },
 };
 
@@ -46,13 +49,13 @@ function ProtectedNavigation() {
       <View
         style={{
           flex: 1,
-          backgroundColor: '#000',
+          backgroundColor: LPColors.bg,
           justifyContent: 'center',
           alignItems: 'center',
         }}
       >
-        <ActivityIndicator size="large" color="#39FF14" />
-        <Text style={{ color: '#fff', marginTop: 12 }}>Loading...</Text>
+        <ActivityIndicator size="large" color={LPColors.primary} />
+        <Text style={{ color: LPColors.text, marginTop: 12 }}>Loading...</Text>
       </View>
     );
   }
@@ -76,10 +79,12 @@ function ProtectedNavigation() {
 export default function RootLayout() {
   return (
     <AuthProvider>
-      <ThemeProvider value={LastPuffTheme}>
-        <ProtectedNavigation />
-        <StatusBar style="light" />
-      </ThemeProvider>
+      <GoalsProvider>
+        <ThemeProvider value={LastPuffTheme}>
+          <ProtectedNavigation />
+          <StatusBar style="light" />
+        </ThemeProvider>
+      </GoalsProvider>
     </AuthProvider>
   );
 }

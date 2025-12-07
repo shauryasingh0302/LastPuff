@@ -1,8 +1,11 @@
 import React, { useContext, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
 import { Link, useRouter } from "expo-router";
 import API from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
+import { LPColors } from "../../constants/theme";
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
 interface AuthResponse {
   token: string;
@@ -19,42 +22,117 @@ export default function LoginScreen() {
   const [error, setError] = useState("");
 
   const onLogin = async () => {
+    if (!email || !password) {
+      setError("Please fill in all fields");
+      return;
+    }
     try {
       setLoading(true);
+      setError("");
       const res = await API.post<AuthResponse>("/auth/login", { email, password });
       await auth.loginUser(res.data.user, res.data.token);
-      router.replace("/" as any);
+      router.replace("/(tabs)");
     } catch (err: any) {
-      setError(err.response?.data?.message || "Login failed");
+      setError(err.response?.data?.message || "Login failed - Check your connection");
+      // For demo purposes if fails, we might want a bypass, but sticking to strict for now
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>LastPuff Login</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <View style={styles.formContainer}>
+        <View style={styles.headerContainer}>
+          <View style={styles.iconCircle}>
+            <Ionicons name="leaf" size={40} color={LPColors.primary} />
+          </View>
+          <Text style={styles.title}>Welcome Back</Text>
+          <Text style={styles.subtitle}>Sign in to continue your quit journey</Text>
+        </View>
 
-      <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#888" onChangeText={setEmail} />
-      <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#888" secureTextEntry onChangeText={setPassword} />
+        <View style={styles.inputContainer}>
+          <Ionicons name="mail-outline" size={20} color={LPColors.textGray} style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor={LPColors.textGray}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+        </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+        <View style={styles.inputContainer}>
+          <Ionicons name="lock-closed-outline" size={20} color={LPColors.textGray} style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor={LPColors.textGray}
+            secureTextEntry
+            onChangeText={setPassword}
+          />
+        </View>
 
-      <TouchableOpacity style={styles.button} onPress={onLogin}>
-        <Text style={styles.buttonText}>{loading ? "Loading..." : "Login"}</Text>
-      </TouchableOpacity>
+        {error ? <Text style={styles.error}>{error}</Text> : null}
 
-      <Link href="/auth/signup"><Text style={styles.switchText}>Create an account</Text></Link>
-    </View>
+        <TouchableOpacity onPress={onLogin} disabled={loading}>
+          <LinearGradient
+            colors={[LPColors.primary, '#004d2c']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.button}
+          >
+            <Text style={styles.buttonText}>{loading ? "Signing in..." : "Login"}</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        <Link href="/auth/signup" asChild>
+          <TouchableOpacity>
+            <Text style={styles.switchText}>Don't have an account? <Text style={{ fontWeight: 'bold', color: LPColors.primary }}>Sign Up</Text></Text>
+          </TouchableOpacity>
+        </Link>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000", justifyContent: "center", padding: 20 },
-  title: { color: "#39FF14", fontSize: 28, fontWeight: "bold", textAlign: "center", marginBottom: 20 },
-  input: { borderWidth: 1, borderColor: "#39FF14", padding: 12, borderRadius: 10, marginBottom: 12, color: "#fff" },
-  button: { backgroundColor: "#39FF14", padding: 15, borderRadius: 10 },
-  buttonText: { color: "#000", fontWeight: "bold", textAlign: "center" },
-  switchText: { color: "#39FF14", marginTop: 15, textAlign: "center" },
-  error: { color: "red", textAlign: "center", marginBottom: 10 },
+  container: { flex: 1, backgroundColor: '#0A0A0A', justifyContent: "center", padding: 24 },
+  formContainer: { width: '100%', maxWidth: 400, alignSelf: 'center' },
+  headerContainer: { alignItems: 'center', marginBottom: 40 },
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(57, 255, 20, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: LPColors.primary,
+  },
+  title: { color: LPColors.text, fontSize: 32, fontWeight: "bold", textAlign: "center", marginBottom: 8 },
+  subtitle: { color: LPColors.textGray, fontSize: 16, textAlign: "center" },
+
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: LPColors.surfaceLight,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  inputIcon: { marginLeft: 16, marginRight: 8 },
+  input: { flex: 1, padding: 16, color: LPColors.text, fontSize: 16 },
+
+  button: { padding: 18, borderRadius: 12, alignItems: 'center', marginTop: 8 },
+  buttonText: { color: "#000", fontWeight: "bold", fontSize: 16 },
+
+  switchText: { color: LPColors.textGray, marginTop: 24, textAlign: "center", fontSize: 14 },
+  error: { color: "#FF3B30", textAlign: "center", marginBottom: 16 },
 });

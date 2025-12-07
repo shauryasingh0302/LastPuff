@@ -1,19 +1,52 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useContext, useEffect, useState } from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 import Shine from '../../components/Shine';
 import { AuthContext } from '../../context/AuthContext';
 import { fetchDashboardSummary } from '../../services/api';
-import { router } from "expo-router";
+import { LPColors } from '../../constants/theme';
+import { useGoals } from '../../context/GoalsContext';
+import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 
 const { width } = Dimensions.get('window');
 
+// Interactive Scale Button Component
+const AnimatedBtn = ({ children, onPress, style, disabled }: any) => {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    if (disabled) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    scale.value = withSpring(0.95);
+  };
+
+  const handlePressOut = () => {
+    if (disabled) return;
+    scale.value = withSpring(1);
+  };
+
+  return (
+    <Pressable onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={onPress} disabled={disabled}>
+      <Animated.View style={[style, animatedStyle]}>
+        {children}
+      </Animated.View>
+    </Pressable>
+  );
+};
+
 export default function HomeScreen() {
   const auth: any = useContext(AuthContext);
+  const router = useRouter();
   const userName = auth?.user?.name || 'Player';
 
   const [dashboard, setDashboard] = useState<any>(null);
@@ -33,6 +66,15 @@ export default function HomeScreen() {
     load();
   }, []);
 
+  const { goals, toggleGoalCompletion } = useGoals();
+  const handleGoalPress = (goalId: number) => {
+    const goal = goals.find((g) => g.id === goalId);
+    if (!goal || goal.completed) return;
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    toggleGoalCompletion(goalId);
+  };
+
   const cigsToday = dashboard?.today?.cigarettesAvoided ?? 0;
   const moneyToday = dashboard?.today?.moneySaved ?? 0;
   const goalsToday = dashboard?.today?.goalsCompleted ?? 0;
@@ -44,580 +86,339 @@ export default function HomeScreen() {
       <StatusBar style="light" />
 
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Hi, {userName}</Text>
+      <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.header}>
+        <View>
+          <Text style={styles.greeting}>Welcome back,</Text>
+          <Text style={styles.headerTitle}>{userName}</Text>
+        </View>
         <View style={styles.headerIcons}>
           <View style={styles.coinsBadge}>
-            <Ionicons name="logo-bitcoin" size={16} color="#000000" />
+            <Ionicons name="logo-bitcoin" size={16} color="#FFD700" />
             <Text style={styles.coinsText}>{puffCoins}</Text>
           </View>
-          <Ionicons name="notifications-outline" size={24} color="#fff" style={styles.headerIcon} />
-          <Ionicons name="settings-outline" size={24} color="#fff" />
         </View>
-      </View>
+      </Animated.View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Top Stats Cards */}
-        <View style={styles.topStatsContainer}>
-          <View style={styles.statsCard}>
-            <Text style={styles.statsLabel}>Cigarettes Avoided Today</Text>
-            <Text style={styles.statsValue}>
-              {loadingDashboard ? "--" : cigsToday.toString().padStart(2, "0")}
-            </Text>
-            <Text style={styles.statsSubLabel}>Daily limit: 0/10 cigarettes</Text>
 
-            {/* Money Saved - Small rounded tab inside */}
-            <View style={styles.moneySavedTab}>
-              <Text style={styles.moneySavedTabLabel}>Money Saved Today</Text>
-              <Text style={styles.moneySavedTabValue}>
-                {loadingDashboard ? "₹--" : `₹${moneyToday}`}
+        {/* Top Stats Hero Card */}
+        <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.topStatsContainer}>
+          <LinearGradient
+            colors={[LPColors.primary, '#004d2c']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.statsCard}
+          >
+            <View>
+              <Text style={styles.statsLabel}>Cigarettes Avoided</Text>
+              <Text style={styles.statsValue}>
+                {loadingDashboard ? "--" : cigsToday.toString().padStart(2, "0")}
               </Text>
+              <Text style={styles.statsSubLabel}>Target: 0 cigarettes today</Text>
             </View>
-          </View>
-        </View>
 
-        {/* Streak and Health Impact Combined Card */}
-        <View style={styles.streakHealthCard}>
-          {/* Streak Section */}
-          <View style={styles.streakSection}>
-            <View style={styles.streakLeft}>
-              <View style={styles.streakCircle}>
-                <Svg width="70" height="70" style={styles.streakSvg}>
-                  {/* Background Circle */}
-                  <Circle
-                    cx="35"
-                    cy="35"
-                    r="30"
-                    stroke="rgba(255, 255, 255, 0.2)"
-                    strokeWidth="6"
-                    fill="none"
-                  />
-                  {/* Progress Circle - static visual for now */}
-                  <Circle
-                    cx="35"
-                    cy="35"
-                    r="30"
-                    stroke="#fff"
-                    strokeWidth="6"
-                    fill="none"
-                    strokeDasharray={`${(12 / 30) * 188.4} 188.4`}
-                    strokeDashoffset="47.1"
-                    strokeLinecap="round"
-                  />
-                </Svg>
-                <Text style={styles.streakNumber}>
-                  {loadingDashboard ? "--" : streak}
+            <View style={styles.moneyContainer}>
+              <View style={styles.moneyIcon}>
+                <Ionicons name="wallet" size={20} color={LPColors.primary} />
+              </View>
+              <View>
+                <Text style={styles.moneyLabel}>Saved</Text>
+                <Text style={styles.moneyValue}>
+                  {loadingDashboard ? "₹--" : `₹${moneyToday}`}
                 </Text>
               </View>
             </View>
-            <View style={styles.streakRight}>
-              <View>
-                <Text style={styles.streakLabel}>Streak days</Text>
-                <Text style={styles.streakTitle}>Keep going!</Text>
+          </LinearGradient>
+        </Animated.View>
+
+        {/* Streak & Health Grid */}
+        <Animated.View entering={FadeInDown.delay(300).duration(500)} style={styles.gridContainer}>
+          {/* Streak Card */}
+          <View style={[styles.gridCard, { flex: 1.2 }]}>
+            <View style={styles.streakContent}>
+              <View style={styles.streakCircleContainer}>
+                <Svg width="60" height="60">
+                  <Circle cx="30" cy="30" r="26" stroke="rgba(255,255,255,0.1)" strokeWidth="4" fill="none" />
+                  <Circle cx="30" cy="30" r="26" stroke={LPColors.primary} strokeWidth="4" fill="none" strokeDasharray={`${(streak / 30) * 163} 163`} strokeLinecap="round" />
+                </Svg>
+                <Text style={styles.streakNum}>{loadingDashboard ? "-" : streak}</Text>
               </View>
-              <Link href="/stats" asChild>
-                <TouchableOpacity>
-                  <Text style={styles.viewMore}>view more</Text>
-                </TouchableOpacity>
-              </Link>
+              <View style={{ marginLeft: 12 }}>
+                <Text style={styles.gridTitle}>Day Streak</Text>
+                <Text style={styles.gridSub}>Keep it up!</Text>
+              </View>
             </View>
           </View>
 
-          {/* Health Impact Section (still static for now) */}
-          <View style={styles.healthImpactSection}>
-            <View style={styles.healthMainCard}>
-              <View style={styles.healthIconContainer}>
-                <Ionicons name="heart" size={24} color="#fff" />
+          {/* Health Card */}
+          <View style={[styles.gridCard, { flex: 1 }]}>
+            <View style={styles.healthStats}>
+              <View style={styles.healthItem}>
+                <Text style={styles.healthVal}>-3%</Text>
+                <Text style={styles.healthLabel}>LC Risk</Text>
               </View>
-              <Text style={styles.healthMainLabel}>Your Health</Text>
-              <Text style={styles.healthMainLabel}>Impact Today</Text>
-            </View>
-
-            <View style={styles.healthStatCard}>
-              <Text style={styles.healthStatLabel}>LC</Text>
-              <Text style={styles.healthStatLabel}>risk</Text>
-              <Text style={styles.healthStatValue}>-3%</Text>
-            </View>
-
-            <View style={styles.healthStatCard}>
-              <Text style={styles.healthStatLabel}>Cancer</Text>
-              <Text style={styles.healthStatLabel}>risk</Text>
-              <Text style={styles.healthStatValue}>-2%</Text>
+              <View style={styles.divider} />
+              <View style={styles.healthItem}>
+                <Text style={styles.healthVal}>-2%</Text>
+                <Text style={styles.healthLabel}>Cancer</Text>
+              </View>
             </View>
           </View>
-        </View>
+        </Animated.View>
 
-        {/* Goals */}
-        <View style={styles.goalsCard}>
+        {/* SOS Button */}
+        <Animated.View entering={FadeInDown.delay(400).duration(500)} style={{ marginBottom: 24 }}>
+          <AnimatedBtn onPress={() => router.push('/sos')}>
+            <LinearGradient
+              colors={['#FF3B30', '#FF9500']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.sosButton}
+            >
+              <Ionicons name="alert-circle" size={24} color="#FFF" style={{ marginRight: 8 }} />
+              <Text style={styles.sosText}>SOS Support</Text>
+            </LinearGradient>
+          </AnimatedBtn>
+        </Animated.View>
+
+        {/* Daily Goals */}
+        <Animated.View entering={FadeInDown.delay(500).duration(500)} style={styles.sectionContainer}>
           <Link href="/goals" asChild>
-            <TouchableOpacity style={styles.goalsHeader}>
-              <Text style={styles.goalsTitle}>Goals</Text>
-              <Ionicons name="chevron-forward" size={20} color="#888" />
+            <TouchableOpacity style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Daily Goals</Text>
+              <Text style={styles.sectionLink}>View All</Text>
             </TouchableOpacity>
           </Link>
 
-          <View style={styles.goalsSectionHeader}>
-            <Text style={styles.sectionTitle}>Goals</Text>
-            <TouchableOpacity style={styles.addGoalButton}>
-              <Text style={styles.addGoalText}>Add Goal</Text>
-            </TouchableOpacity>
+          <View style={styles.goalsContainer}>
+            {goals.map((goal) => (
+              <AnimatedBtn
+                key={goal.id}
+                onPress={() => handleGoalPress(goal.id)}
+                disabled={goal.completed}
+                style={[styles.goalRow, goal.completed && styles.goalCompleted]}
+              >
+                <View style={[styles.checkBox, goal.completed && styles.checkBoxChecked]}>
+                  {goal.completed && <Ionicons name="checkmark" size={12} color="#000" />}
+                </View>
+                <Text style={[styles.goalText, goal.completed && styles.goalTextCompleted]}>{goal.text}</Text>
+              </AnimatedBtn>
+            ))}
           </View>
-
-          <Text style={styles.goalsProgressText}>
-            {loadingDashboard
-              ? "Loading today's goals..."
-              : `Completed ${goalsToday} / 5 today`}
-          </Text>
-
-          <View style={styles.goalsList}>
-            <TouchableOpacity style={styles.goalItem}>
-              <View style={styles.goalLeft}>
-                <View style={styles.goalCheckbox} />
-                <Text style={styles.goalText}>Avoid 10 cigarettes</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#666" />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.goalItem}>
-              <View style={styles.goalLeft}>
-                <View style={styles.goalCheckbox} />
-                <Text style={styles.goalText}>Save ₹200 today</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#666" />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.goalItem}>
-              <View style={styles.goalLeft}>
-                <View style={styles.goalCheckbox} />
-                <Text style={styles.goalText}>Play 1 focus game</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#666" />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.goalItem}>
-              <View style={styles.goalLeft}>
-                <View style={styles.goalCheckbox} />
-                <Text style={styles.goalText}>Walk 10 minutes</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#666" />
-            </TouchableOpacity>
-          </View>
-        </View>
+        </Animated.View>
 
         {/* Quick Games */}
-        <View style={styles.gamesSection}>
+        <Animated.View entering={FadeInDown.delay(600).duration(500)} style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>Quick Games</Text>
-          <View style={styles.gamesGrid}>
-            <TouchableOpacity style={styles.gameCard}>
-              <Ionicons name="grid" size={24} color="#39FF14" />
-              <Text style={styles.gameLabel}>2048</Text>
-            </TouchableOpacity>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.gamesRow}>
+            <AnimatedBtn onPress={() => router.push('/games/breathing')} style={styles.gameCard}>
+              <View style={[styles.gameIcon, { backgroundColor: 'rgba(57, 255, 20, 0.1)' }]}>
+                <Ionicons name="fitness" size={24} color={LPColors.primary} />
+              </View>
+              <Text style={styles.gameName}>Breathing</Text>
+            </AnimatedBtn>
 
-            <TouchableOpacity style={styles.gameCard}>
-              <Ionicons name="infinite" size={24} color="#39FF14" />
-              <Text style={styles.gameLabel}>Subway Mind</Text>
-            </TouchableOpacity>
+            <AnimatedBtn onPress={() => router.push('/games/2048')} style={styles.gameCard}>
+              <View style={[styles.gameIcon, { backgroundColor: 'rgba(57, 255, 20, 0.1)' }]}>
+                <Ionicons name="grid" size={24} color={LPColors.primary} />
+              </View>
+              <Text style={styles.gameName}>2048</Text>
+            </AnimatedBtn>
 
-            <TouchableOpacity style={styles.gameCard}>
-              <Ionicons name="eye" size={24} color="#39FF14" />
-              <Text style={styles.gameLabel}>AI Focus</Text>
-            </TouchableOpacity>
+            <AnimatedBtn onPress={() => router.push('/games/maths-quiz')} style={styles.gameCard}>
+              <View style={[styles.gameIcon, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
+                <Ionicons name="calculator" size={24} color="#3B82F6" />
+              </View>
+              <Text style={styles.gameName}>Maths</Text>
+            </AnimatedBtn>
 
-            <TouchableOpacity style={styles.gameCard}>
-              <Ionicons name="cube" size={24} color="#39FF14" />
-              <Text style={styles.gameLabel}>Blocks</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+            <AnimatedBtn onPress={() => router.push('/games/memory-game')} style={styles.gameCard}>
+              <View style={[styles.gameIcon, { backgroundColor: 'rgba(236, 72, 153, 0.1)' }]}>
+                <Ionicons name="albums" size={24} color="#EC4899" />
+              </View>
+              <Text style={styles.gameName}>Memory</Text>
+            </AnimatedBtn>
+          </ScrollView>
+        </Animated.View>
 
+        {/* National Impact */}
+        <Animated.View entering={FadeInDown.delay(700).duration(500)} style={[styles.sectionContainer, { marginBottom: 100 }]}>
+          <Text style={styles.sectionTitle}>Community Impact</Text>
+          <Shine style={styles.impactCard}>
+            <View style={styles.impactRow}>
+              <View>
+                <Text style={styles.impactLabel}>Cigarettes Avoided</Text>
+                <Text style={styles.impactValue}>1.2M</Text>
+              </View>
+              <View>
+                <Text style={styles.impactLabel}>Money Saved</Text>
+                <Text style={styles.impactValue}>₹42.5M</Text>
+              </View>
+            </View>
+          </Shine>
+        </Animated.View>
 
-        {/* SOS Button */}
-<View style={{ marginBottom: 24, marginTop: 10 }}>
-  <TouchableOpacity
-    style={{
-      backgroundColor: '#39FF14',
-      paddingVertical: 16,
-      borderRadius: 16,
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}
-    onPress={() => router.push('/sos')}
-  >
-    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#000000' }}>
-      SOS Support
-    </Text>
-  </TouchableOpacity>
-</View>
-
-
-        {/* National Impact (still static for now) */}
-        <View style={styles.nationalSection}>
-          <Text style={styles.sectionTitle}>National Impact</Text>
-          <View style={styles.nationalCardsContainer}>
-            <Shine style={styles.nationalCard}>
-              <Text style={styles.nationalLabel}>India avoided</Text>
-              <Text style={styles.nationalValue}>1.2M</Text>
-              <Text style={styles.nationalUnit}>cigarettes</Text>
-            </Shine>
-            <Shine style={styles.nationalCard}>
-              <Text style={styles.nationalLabel}>CO₂ reduced</Text>
-              <Text style={styles.nationalValue}>3.6K</Text>
-              <Text style={styles.nationalUnit}>kg</Text>
-            </Shine>
-            <Shine style={styles.nationalCard}>
-              <Text style={styles.nationalLabel}>Collective savings</Text>
-              <Text style={styles.nationalValue}>₹42.5M</Text>
-            </Shine>
-          </View>
-        </View>
       </ScrollView>
 
       <TouchableOpacity style={styles.fab}>
-        <Ionicons name="chatbubble-ellipses-outline" size={28} color="#000000" />
+        <LinearGradient
+          colors={[LPColors.primary, '#004d2c']}
+          style={styles.fabGradient}
+        >
+          <Ionicons name="chatbubbles" size={24} color="#000" />
+        </LinearGradient>
       </TouchableOpacity>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000000',
-  },
+  container: { flex: 1, backgroundColor: '#0A0A0A' },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#000000',
   },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  headerIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerIcon: {
-    marginRight: 15,
-  },
+  greeting: { fontSize: 14, color: LPColors.textGray },
+  headerTitle: { fontSize: 24, fontWeight: 'bold', color: LPColors.text },
+  headerIcons: { flexDirection: 'row', alignItems: 'center' },
   coinsBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#39FF14',
-    paddingHorizontal: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    marginRight: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
-  coinsText: {
-    color: '#000000',
-    fontWeight: '600',
-    marginLeft: 4,
-    fontSize: 12,
-  },
-  scrollView: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  topStatsContainer: {
-    marginBottom: 20,
-  },
+  coinsText: { color: '#FFD700', fontWeight: 'bold', marginLeft: 6, fontSize: 14 },
+  scrollView: { flex: 1, paddingHorizontal: 20 },
+  topStatsContainer: { marginBottom: 20 },
   statsCard: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 12,
+    borderRadius: 20,
+    padding: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statsLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 12, marginBottom: 4 },
+  statsValue: { fontSize: 36, fontWeight: 'bold', color: '#FFF' },
+  statsSubLabel: { color: 'rgba(255,255,255,0.5)', fontSize: 12 },
+  moneyContainer: { alignItems: 'flex-end', justifyContent: 'center' },
+  moneyIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  moneyLabel: { color: 'rgba(0,0,0,0.5)', fontSize: 10, display: 'none' }, // hidden for aesthetic
+  moneyValue: { color: '#FFF', fontSize: 18, fontWeight: 'bold', marginTop: 4 },
+
+  gridContainer: { flexDirection: 'row', gap: 12, marginBottom: 24 },
+  gridCard: {
+    backgroundColor: '#1C1C1E',
+    borderRadius: 16,
     padding: 16,
-    borderLeftColor: '#39FF14',
-    borderTopColor: '#39FF14',
-    borderTopWidth: 1,
-    borderLeftWidth: 1,
-    position: 'relative',
-  },
-  statsLabel: {
-    fontSize: 12,
-    color: '#39FF14',
-    marginBottom: 8,
-  },
-  statsValue: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#39FF14',
-    marginBottom: 4,
-    textShadowColor: '#39FF14',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 20,
-  },
-  statsSubLabel: {
-    fontSize: 12,
-    color: '#888',
-  },
-  moneySavedTab: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    backgroundColor: '#39FF14',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    minWidth: 100,
-  },
-  moneySavedTabLabel: {
-    fontSize: 10,
-    color: '#000000',
-    marginBottom: 2,
-    textAlign: 'center',
-  },
-  moneySavedTabValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000000',
-    textAlign: 'center',
-  },
-  streakHealthCard: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-  },
-  streakSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingBottom: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  streakLeft: {
-    marginRight: 16,
-  },
-  streakCircle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
     justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
   },
-  streakSvg: {
-    position: 'absolute',
-  },
-  streakNumber: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#39FF14',
-  },
-  streakRight: {
-    flex: 1,
+  streakContent: { flexDirection: 'row', alignItems: 'center' },
+  streakCircleContainer: { alignItems: 'center', justifyContent: 'center' },
+  streakNum: { position: 'absolute', fontSize: 18, fontWeight: 'bold', color: '#FFF' },
+  gridTitle: { color: '#FFF', fontSize: 14, fontWeight: '600' },
+  gridSub: { color: LPColors.textGray, fontSize: 12 },
+  healthStats: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  healthItem: { alignItems: 'center', flex: 1 },
+  healthVal: { color: LPColors.primary, fontSize: 18, fontWeight: 'bold' },
+  healthLabel: { color: LPColors.textGray, fontSize: 10, marginTop: 2 },
+  divider: { width: 1, height: 24, backgroundColor: 'rgba(255,255,255,0.1)' },
+
+  sosButton: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  streakLabel: {
-    fontSize: 14,
-    color: '#39FF14',
-    marginBottom: 4,
-  },
-  streakTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  viewMore: {
-    fontSize: 14,
-    color: '#39FF14',
-  },
-  healthImpactSection: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  healthMainCard: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
-  },
-  healthIconContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 20,
-    padding: 8,
-    marginBottom: 8,
-  },
-  healthMainLabel: {
-    fontSize: 11,
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-  healthStatCard: {
-    backgroundColor: 'rgba(0, 0, 0, 0.2)',
-    borderRadius: 12,
-    padding: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 70,
-  },
-  healthStatLabel: {
-    fontSize: 11,
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: '600',
-  },
-  healthStatValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginTop: 4,
-  },
-  goalsCard: {
-    backgroundColor: '#121212',
-    borderRadius: 16,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
-    marginBottom: 20,
-  },
-  goalsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  goalsTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  goalsSectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  goalsProgressText: {
-    fontSize: 12,
-    color: '#888',
-    marginBottom: 12,
-  },
-  addGoalButton: {
-    backgroundColor: '#39FF14',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  addGoalText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#000000',
-  },
-  goalsList: {
-    gap: 0,
-  },
-  goalItem: {
-    backgroundColor: 'transparent',
-    borderRadius: 0,
     paddingVertical: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E1E1E',
-  },
-  goalLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  goalCheckbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    backgroundColor: '#39FF14',
-    marginRight: 16,
-  },
-  goalText: {
-    fontSize: 16,
-    color: '#fff',
-  },
-  gamesSection: {
-    marginBottom: 24,
-  },
-  gamesGrid: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
-  },
-  gameCard: {
-    flex: 1,
-    backgroundColor: '#1E1E1E',
-    borderRadius: 12,
-    padding: 20,
-    alignItems: 'center',
-    gap: 8,
-  },
-  gameLabel: {
-    fontSize: 12,
-    color: '#fff',
-    textAlign: 'center',
-  },
-  nationalSection: {
-    marginBottom: 80,
-  },
-  nationalCardsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 16,
-    gap: 12,
-  },
-  nationalCard: {
-    flex: 1,
-    backgroundColor: '#121212',
     borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 120,
-  },
-  nationalLabel: {
-    fontSize: 12,
-    color: '#888',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  nationalValue: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-  },
-  nationalUnit: {
-    fontSize: 16,
-    color: '#fff',
-    textAlign: 'center',
-    marginTop: 4,
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 90,
-    right: 20,
-    backgroundColor: '#39FF14',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 8,
-    shadowColor: '#39FF14',
+    shadowColor: '#FF3B30',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  sosText: { color: '#FFF', fontSize: 18, fontWeight: 'bold' },
+
+  sectionContainer: { marginBottom: 24 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#FFF' },
+  sectionLink: { fontSize: 12, color: LPColors.primary },
+
+  goalsContainer: { backgroundColor: '#1C1C1E', borderRadius: 16, padding: 4 },
+  goalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  goalCompleted: { opacity: 0.5 },
+  checkBox: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: LPColors.primary,
+    marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkBoxChecked: { backgroundColor: LPColors.primary },
+  goalText: { color: '#FFF', fontSize: 15, flex: 1 },
+  goalTextCompleted: { textDecorationLine: 'line-through', color: LPColors.textGray },
+
+  gamesRow: { gap: 12 },
+  gameCard: {
+    width: 100,
+    height: 100,
+    backgroundColor: '#1C1C1E',
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  gameIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gameName: { color: '#FFF', fontSize: 12, fontWeight: '600' },
+
+  impactCard: { backgroundColor: '#1C1C1E', borderRadius: 16, padding: 20 },
+  impactRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  impactLabel: { fontSize: 12, color: LPColors.textGray },
+  impactValue: { fontSize: 20, fontWeight: 'bold', color: '#FFF', marginTop: 4 },
+
+  fab: {
+    position: 'absolute',
+    bottom: 100,
+    right: 20,
+    shadowColor: LPColors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  fabGradient: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

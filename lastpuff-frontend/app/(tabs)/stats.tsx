@@ -2,6 +2,9 @@ import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LPColors } from '../../constants/theme';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function StatsScreen() {
   return (
@@ -9,16 +12,12 @@ export default function StatsScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Dashboard</Text>
-        <View style={styles.headerIcons}>
-          <Ionicons name="search" size={24} color="#fff" style={styles.headerIcon} />
-          <Ionicons name="settings-outline" size={24} color="#fff" />
-        </View>
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Performance Highlights */}
-        <View style={styles.performanceContainer}>
-          <Text style={styles.performanceTitle}>Mahima, here's your performance today.</Text>
+        <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.performanceContainer}>
+          <Text style={styles.performanceTitle}>Performance Summary</Text>
 
           <View style={styles.highlightCard}>
             <Text style={styles.highlightIcon}>🚭</Text>
@@ -40,117 +39,133 @@ export default function StatsScreen() {
             <Text style={styles.highlightText}>You handled 3 cravings successfully</Text>
           </View>
 
-          <View style={styles.highlightCard}>
+          <LinearGradient
+            colors={[LPColors.primary, '#004d2c']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.highlightGradientCard}
+          >
             <Text style={styles.highlightIcon}>🏆</Text>
-            <Text style={styles.highlightText}>Streak: 14 days (2 days to next badge)</Text>
-          </View>
-        </View>
+            <Text style={[styles.highlightText, { color: '#000', fontWeight: 'bold' }]}>Streak: 14 days (2 days to next badge)</Text>
+          </LinearGradient>
+        </Animated.View>
 
         {/* Weekly Progress */}
-        <View style={styles.weeklySection}>
+        <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.weeklySection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Weekly Progress</Text>
-            <Ionicons name="bar-chart-outline" size={20} color="#39FF14" />
+            <Ionicons name="bar-chart-outline" size={20} color={LPColors.primary} />
           </View>
           <View style={styles.chartContainer}>
             {[{ label: 'Mon', height: 55 }, { label: 'Tue', height: 70 }, { label: 'Wed', height: 45 }, { label: 'Thu', height: 85 }, { label: 'Fri', height: 90 }, { label: 'Sat', height: 60 }, { label: 'Sun', height: 75 }].map((item, index) => (
               <View key={index} style={styles.chartItem}>
-                <View style={styles.chartBarContainer}>
-                  <View style={[styles.chartBar, { height: item.height }]} />
+                <View style={[styles.chartBarContainer, { height: 100 }]}>
+                  <LinearGradient
+                    colors={[LPColors.primary, 'rgba(57, 255, 20, 0.3)']}
+                    style={[styles.chartBar, { height: item.height }]}
+                  />
                 </View>
                 <Text style={styles.chartLabel}>{item.label}</Text>
               </View>
             ))}
           </View>
-        </View>
+        </Animated.View>
 
         {/* Monthly Insights */}
-        <View style={styles.section}>
+        <Animated.View entering={FadeInDown.delay(300).duration(500)} style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Monthly Insights</Text>
-            <Ionicons name="calendar-outline" size={20} color="#39FF14" />
+            <Ionicons name="calendar-outline" size={20} color={LPColors.primary} />
           </View>
           <View style={styles.insightsGrid}>
-            <View style={styles.insightCard}>
+            <LinearGradient colors={[LPColors.surfaceLight, LPColors.surface]} style={styles.insightCard}>
               <Text style={styles.insightLabel}>Cigarettes Avoided</Text>
               <Text style={styles.insightValue}>56</Text>
-            </View>
-            <View style={styles.insightCard}>
+            </LinearGradient>
+            <LinearGradient colors={[LPColors.surfaceLight, LPColors.surface]} style={styles.insightCard}>
               <Text style={styles.insightLabel}>Cravings Handled</Text>
               <Text style={styles.insightValue}>22</Text>
-            </View>
-            <View style={styles.insightCard}>
+            </LinearGradient>
+            <LinearGradient colors={[LPColors.surfaceLight, LPColors.surface]} style={styles.insightCard}>
               <Text style={styles.insightLabel}>Success %</Text>
               <Text style={styles.insightValue}>78%</Text>
-            </View>
+            </LinearGradient>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Finance Section */}
-        <View style={styles.financeSection}>
-          <View style={styles.financeHeader}>
-            <Ionicons name="wallet-outline" size={24} color="#39FF14" />
-            <View style={styles.financeText}>
-              <Text style={styles.financeLabel}>Finance</Text>
-              <Text style={styles.financeValue}>₹6,846 Saved This Month</Text>
+        <Animated.View entering={FadeInDown.delay(400).duration(500)} style={styles.financeSection}>
+          <LinearGradient
+            colors={['rgba(57, 255, 20, 0.1)', 'transparent']}
+            style={styles.financeGradient}
+          >
+            <View style={styles.financeHeader}>
+              <View style={styles.iconCircle}>
+                <Ionicons name="wallet" size={24} color={LPColors.primary} />
+              </View>
+              <View style={styles.financeText}>
+                <Text style={styles.financeLabel}>Finance</Text>
+                <Text style={styles.financeValue}>₹6,846 Saved This Month</Text>
+              </View>
             </View>
-          </View>
-        </View>
+          </LinearGradient>
+        </Animated.View>
 
         {/* Health Improvements */}
-        <View style={styles.section}>
+        <Animated.View entering={FadeInDown.delay(500).duration(500)} style={styles.section}>
           <Text style={styles.sectionTitle}>Health Improvements</Text>
-          <View style={styles.healthGrid}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.healthGrid}>
             <View style={styles.healthCard}>
-              <Ionicons name="fitness-outline" size={24} color="#39FF14" />
+              <Ionicons name="fitness-outline" size={24} color={LPColors.primary} />
               <Text style={styles.healthLabel}>Lung Capacity</Text>
               <Text style={styles.healthValue}>+12%</Text>
             </View>
             <View style={styles.healthCard}>
-              <Ionicons name="heart-outline" size={24} color="#39FF14" />
+              <Ionicons name="heart-outline" size={24} color={LPColors.primary} />
               <Text style={styles.healthLabel}>Cancer Risk</Text>
               <Text style={styles.healthValue}>-4%</Text>
             </View>
             <View style={styles.healthCard}>
-              <Ionicons name="pulse-outline" size={24} color="#39FF14" />
+              <Ionicons name="pulse-outline" size={24} color={LPColors.primary} />
               <Text style={styles.healthLabel}>Heart Rate</Text>
               <Text style={styles.healthValue}>Normal</Text>
             </View>
-          </View>
-        </View>
+          </ScrollView>
+        </Animated.View>
 
         {/* Rewards Earned */}
-        <View style={styles.section}>
+        <Animated.View entering={FadeInDown.delay(600).duration(500)} style={styles.section}>
           <Text style={styles.sectionTitle}>Rewards Earned</Text>
           <View style={styles.rewardsGrid}>
             <View style={styles.rewardCard}>
-              <Ionicons name="medal-outline" size={32} color="#39FF14" />
-              <Text style={styles.rewardLabel}>Badge</Text>
+              <Ionicons name="medal-outline" size={32} color="#FFD700" />
+              <Text style={[styles.rewardLabel, { color: '#FFD700' }]}>Badge</Text>
               <Text style={styles.rewardSubLabel}>7-day streak</Text>
             </View>
             <View style={styles.rewardCard}>
-              <Ionicons name="trophy-outline" size={32} color="#39FF14" />
-              <Text style={styles.rewardLabel}>Team</Text>
+              <Ionicons name="trophy-outline" size={32} color="#C0C0C0" />
+              <Text style={[styles.rewardLabel, { color: '#C0C0C0' }]}>Team</Text>
               <Text style={styles.rewardSubLabel}>Top 5%</Text>
             </View>
             <View style={styles.rewardCard}>
-              <Ionicons name="ribbon-outline" size={32} color="#39FF14" />
-              <Text style={styles.rewardLabel}>Solo</Text>
+              <Ionicons name="ribbon-outline" size={32} color="#CD7F32" />
+              <Text style={[styles.rewardLabel, { color: '#CD7F32' }]}>Solo</Text>
               <Text style={styles.rewardSubLabel}>10 wins</Text>
             </View>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Achievement Timeline */}
-        <View style={styles.section}>
+        <Animated.View entering={FadeInDown.delay(700).duration(500)} style={[styles.section, { marginBottom: 100 }]}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Achievement Timeline</Text>
-            <Ionicons name="trophy-outline" size={20} color="#39FF14" />
+            <Ionicons name="time-outline" size={20} color={LPColors.primary} />
           </View>
 
           <View style={styles.timelineItem}>
+            <View style={styles.timelineConnect} />
             <View style={styles.timelineIcon}>
-              <Ionicons name="checkmark" size={16} color="#fff" />
+              <Ionicons name="checkmark" size={14} color="#000" />
             </View>
             <View style={styles.timelineContent}>
               <Text style={styles.timelineTitle}>Day 15</Text>
@@ -159,8 +174,9 @@ export default function StatsScreen() {
           </View>
 
           <View style={styles.timelineItem}>
+            <View style={styles.timelineConnect} />
             <View style={styles.timelineIcon}>
-              <Ionicons name="star" size={16} color="#fff" />
+              <Ionicons name="star" size={14} color="#000" />
             </View>
             <View style={styles.timelineContent}>
               <Text style={styles.timelineTitle}>Day 7</Text>
@@ -169,15 +185,15 @@ export default function StatsScreen() {
           </View>
 
           <View style={styles.timelineItem}>
-            <View style={styles.timelineIconDisabled}>
-              <Ionicons name="sparkles" size={16} color="#666" />
+            <View style={[styles.timelineIcon, { backgroundColor: LPColors.surfaceLight }]}>
+              <Ionicons name="sparkles" size={14} color={LPColors.textGray} />
             </View>
             <View style={styles.timelineContent}>
-              <Text style={styles.timelineTitleDisabled}>Tonight</Text>
-              <Text style={styles.timelineTextDisabled}>Evening watch call starting in 18h! Get ready to share wins!</Text>
+              <Text style={[styles.timelineTitle, { color: LPColors.textGray }]}>Tonight</Text>
+              <Text style={styles.timelineText}>Evening watch call starting in 18h!</Text>
             </View>
           </View>
-        </View>
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -186,7 +202,7 @@ export default function StatsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#0A0A0A',
   },
   header: {
     flexDirection: 'row',
@@ -194,19 +210,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#000000',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
-  },
-  headerIcons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerIcon: {
-    marginRight: 15,
+    color: LPColors.text,
   },
   scrollView: {
     flex: 1,
@@ -216,20 +224,17 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   performanceContainer: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 16,
-    padding: 20,
     marginBottom: 24,
   },
   performanceTitle: {
     fontSize: 16,
-    color: '#39FF14',
+    color: LPColors.primary,
     marginBottom: 16,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   weeklySection: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 16,
+    backgroundColor: LPColors.surfaceLight,
+    borderRadius: 20,
     padding: 20,
     marginBottom: 24,
   },
@@ -242,12 +247,19 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#fff',
+    color: LPColors.text,
     marginBottom: 16,
   },
   highlightCard: {
-    backgroundColor: '#121212',
-    borderRadius: 12,
+    backgroundColor: LPColors.surfaceLight,
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  highlightGradientCard: {
+    borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -259,25 +271,9 @@ const styles = StyleSheet.create({
   },
   highlightText: {
     fontSize: 14,
-    color: '#fff',
+    color: LPColors.text,
     flex: 1,
-  },
-  badgeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  badge: {
-    backgroundColor: '#39FF14',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginLeft: 6,
-  },
-  badgeText: {
-    fontSize: 14,
-    color: '#000000',
-    fontWeight: '600',
+    fontWeight: '500',
   },
   chartContainer: {
     flexDirection: 'row',
@@ -290,20 +286,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   chartBarContainer: {
-    height: 100,
     width: '100%',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    paddingHorizontal: 2,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 10,
+    overflow: 'hidden',
   },
   chartBar: {
-    width: 12,
-    backgroundColor: '#39FF14',
-    borderRadius: 20,
+    width: '100%',
+    borderRadius: 10,
   },
   chartLabel: {
-    fontSize: 12,
-    color: '#888',
+    fontSize: 10,
+    color: LPColors.textGray,
     marginTop: 8,
   },
   insightsGrid: {
@@ -312,60 +308,73 @@ const styles = StyleSheet.create({
   },
   insightCard: {
     flex: 1,
-    backgroundColor: '#1E1E1E',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   insightLabel: {
-    fontSize: 12,
-    color: '#888',
+    fontSize: 11,
+    color: LPColors.textGray,
     textAlign: 'center',
     marginBottom: 8,
   },
   insightValue: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
+    color: LPColors.text,
   },
   financeSection: {
-    backgroundColor: '#1E1E1E',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: LPColors.surfaceLight,
+    borderRadius: 16,
     marginBottom: 24,
+    overflow: 'hidden',
+  },
+  financeGradient: {
+    padding: 20,
   },
   financeHeader: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+  iconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(57, 255, 20, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   financeText: {
-    marginLeft: 12,
+    marginLeft: 16,
     flex: 1,
   },
   financeLabel: {
     fontSize: 12,
-    color: '#888',
+    color: LPColors.textGray,
     marginBottom: 4,
   },
   financeValue: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
+    color: LPColors.text,
   },
   healthGrid: {
     flexDirection: 'row',
     gap: 12,
   },
   healthCard: {
-    flex: 1,
-    backgroundColor: '#1E1E1E',
-    borderRadius: 12,
+    width: 110,
+    backgroundColor: LPColors.surfaceLight,
+    borderRadius: 16,
     padding: 16,
     alignItems: 'center',
+    marginRight: 12,
   },
   healthLabel: {
     fontSize: 11,
-    color: '#888',
+    color: LPColors.textGray,
     textAlign: 'center',
     marginTop: 8,
     marginBottom: 4,
@@ -373,7 +382,7 @@ const styles = StyleSheet.create({
   healthValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#39FF14',
+    color: LPColors.primary,
   },
   rewardsGrid: {
     flexDirection: 'row',
@@ -381,65 +390,58 @@ const styles = StyleSheet.create({
   },
   rewardCard: {
     flex: 1,
-    backgroundColor: '#1E1E1E',
-    borderRadius: 12,
+    backgroundColor: LPColors.surfaceLight,
+    borderRadius: 16,
     padding: 16,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
   rewardLabel: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
+    fontWeight: 'bold',
     marginTop: 8,
   },
   rewardSubLabel: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 4,
+    fontSize: 10,
+    color: LPColors.textGray,
+    marginTop: 2,
   },
   timelineItem: {
     flexDirection: 'row',
-    marginBottom: 16,
+    marginBottom: 24,
+    position: 'relative',
+  },
+  timelineConnect: {
+    position: 'absolute',
+    left: 15,
+    top: 32,
+    bottom: -24,
+    width: 2,
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
   timelineIcon: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#39FF14',
+    backgroundColor: LPColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
-  },
-  timelineIconDisabled: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#1E1E1E',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
+    marginRight: 16,
+    zIndex: 1,
   },
   timelineContent: {
     flex: 1,
+    justifyContent: 'center',
   },
   timelineTitle: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#fff',
-    marginBottom: 4,
-  },
-  timelineTitleDisabled: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-    marginBottom: 4,
+    fontWeight: 'bold',
+    color: LPColors.text,
+    marginBottom: 2,
   },
   timelineText: {
-    fontSize: 14,
-    color: '#888',
-  },
-  timelineTextDisabled: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 13,
+    color: LPColors.textGray,
   },
 });

@@ -39,6 +39,25 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow LastPuff to use your location to send alerts when you enter or exit trigger zones.",
+          "locationAlwaysPermission": "Allow LastPuff to use your location in the background for geofencing alerts.",
+          "locationWhenInUsePermission": "Allow LastPuff to use your location to show your position on the map.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#39FF14",
+          "sounds": [],
+          "mode": "production"
+        }
       ]
     ],
     "experiments": {

@@ -12,9 +12,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AuthContext } from "../../context/AuthContext";
 import { fetchDashboardSummary } from "../../services/api";
 import { LPColors } from "../../constants/theme";
+import { useRouter } from "expo-router";
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function ProfileScreen() {
   const { logout, user }: any = useContext(AuthContext);
+  const router = useRouter();
 
   const [stats, setStats] = useState({
     streakDays: 0,
@@ -44,6 +48,7 @@ export default function ProfileScreen() {
 
   const settings = [
     { icon: "person-outline", name: "Edit Profile" },
+    { icon: "clipboard-outline", name: "Quit Plan Settings", route: "/onboarding/questionnaire" },
     { icon: "notifications-outline", name: "Notification Settings" },
     { icon: "flag-outline", name: "Manage Goals" },
     { icon: "lock-closed-outline", name: "Privacy & Security" },
@@ -59,129 +64,139 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Profile Header */}
-        <View style={styles.profileHeader}>
-          {/* Avatar */}
-          {user?.avatarUrl ? (
-            <Image source={{ uri: user.avatarUrl }} style={styles.avatar} />
-          ) : (
-            <View style={[styles.avatar, styles.avatarFallback]}>
-              <Text style={styles.avatarInitial}>
-                {user?.name?.charAt(0)?.toUpperCase() || "U"}
-              </Text>
-            </View>
-          )}
+        <Animated.View entering={FadeInDown.delay(100).duration(500)}>
+          {/* Profile Header */}
+          <View style={styles.profileHeader}>
+            {/* Avatar */}
+            {user?.avatarUrl ? (
+              <Image source={{ uri: user.avatarUrl }} style={styles.avatar} />
+            ) : (
+              <View style={[styles.avatar, styles.avatarFallback]}>
+                <Text style={styles.avatarInitial}>
+                  {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                </Text>
+              </View>
+            )}
 
-          <TouchableOpacity style={styles.editIcon}>
-            <Ionicons name="pencil" size={18} color="#fff" />
-          </TouchableOpacity>
+            <TouchableOpacity style={styles.editIcon}>
+              <Ionicons name="pencil" size={18} color={LPColors.text} />
+            </TouchableOpacity>
 
-          <Text style={styles.name}>{user?.name}</Text>
-          <Text style={styles.since}>
-            Quit Journey Member since {memberSince}
-          </Text>
-        </View>
+            <Text style={styles.name}>{user?.name}</Text>
+            <Text style={styles.since}>
+              Quit Journey Member since {memberSince}
+            </Text>
+          </View>
+        </Animated.View>
 
         {/* Stats */}
-        <View style={styles.statsContainer}>
+        <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.statsContainer}>
           <View style={styles.statBox}>
-            <Ionicons name="flame-outline" size={20} color={LPColors.neon} />
+            <Ionicons name="flame-outline" size={20} color={LPColors.primary} />
             <Text style={styles.statLabel}>Streak</Text>
             <Text style={styles.statValue}>{stats.streakDays} days</Text>
           </View>
           <View style={styles.statBox}>
-            <Ionicons name="leaf-outline" size={20} color={LPColors.neon} />
+            <Ionicons name="leaf-outline" size={20} color={LPColors.primary} />
             <Text style={styles.statLabel}>Cravings</Text>
             <Text style={styles.statValue}>{stats.cravingsHandled}</Text>
           </View>
           <View style={styles.statBox}>
-            <Ionicons name="wallet-outline" size={20} color={LPColors.neon} />
+            <Ionicons name="wallet-outline" size={20} color={LPColors.primary} />
             <Text style={styles.statLabel}>Saved</Text>
             <Text style={styles.statValue}>₹{stats.moneySaved}</Text>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Overview Section */}
-        <View style={styles.section}>
+        <Animated.View entering={FadeInDown.delay(300).duration(500)} style={styles.section}>
           <Text style={styles.sectionTitle}>Your Journey Overview</Text>
 
           <View style={styles.overviewContainer}>
-            <View style={styles.overviewBox}>
+            <LinearGradient colors={[LPColors.primary, '#006400']} style={styles.overviewBox}>
               <Text style={styles.overviewLabel}>Goals completed</Text>
               <Text style={styles.overviewValue}>{stats.goalsCompleted}</Text>
-            </View>
+            </LinearGradient>
 
-            <View style={styles.overviewBox}>
+            <LinearGradient colors={[LPColors.primary, '#006400']} style={styles.overviewBox}>
               <Text style={styles.overviewLabel}>Cravings handled</Text>
               <Text style={styles.overviewValue}>
                 {stats.cravingsHandled}
               </Text>
-            </View>
+            </LinearGradient>
 
-            <View style={styles.overviewBox}>
+            <LinearGradient colors={[LPColors.primary, '#006400']} style={styles.overviewBox}>
               <Text style={styles.overviewLabel}>Money saved</Text>
               <Text style={styles.overviewValue}>₹{stats.moneySaved}</Text>
-            </View>
+            </LinearGradient>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Badges Section */}
-        <View style={styles.section}>
+        <Animated.View entering={FadeInDown.delay(400).duration(500)} style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Badges Earned</Text>
             <Text style={styles.keepGoing}>Keep going</Text>
           </View>
 
           <View style={styles.badgesContainer}>
-            <View style={styles.badge}>
-              <Ionicons name="sparkles-outline" size={24} color="#fff" />
+            <LinearGradient colors={['#FFD700', '#DAA520']} style={styles.badge}>
+              <Ionicons name="sparkles-outline" size={24} color="#000" />
               <Text style={styles.badgeText}>3-day</Text>
-            </View>
-            <View style={styles.badge}>
-              <Ionicons name="calendar-outline" size={24} color="#fff" />
+            </LinearGradient>
+            <LinearGradient colors={['#C0C0C0', '#A9A9A9']} style={styles.badge}>
+              <Ionicons name="calendar-outline" size={24} color="#000" />
               <Text style={styles.badgeText}>7-day</Text>
-            </View>
-            <View style={styles.badge}>
-              <Ionicons name="infinite-outline" size={24} color="#fff" />
+            </LinearGradient>
+            <LinearGradient colors={['#CD7F32', '#8B4513']} style={styles.badge}>
+              <Ionicons name="infinite-outline" size={24} color="#000" />
               <Text style={styles.badgeText}>14-day</Text>
-            </View>
-            <View style={styles.badge}>
-              <Ionicons name="trophy-outline" size={24} color="#fff" />
-              <Text style={styles.badgeText}>1-month</Text>
-            </View>
+            </LinearGradient>
+            <LinearGradient colors={[LPColors.surfaceLight, LPColors.surface]} style={styles.badgeLocked}>
+              <Ionicons name="trophy-outline" size={24} color={LPColors.textGray} />
+              <Text style={styles.badgeTextLocked}>1-month</Text>
+            </LinearGradient>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Settings List */}
-        <View style={styles.settingsContainer}>
+        <Animated.View entering={FadeInDown.delay(500).duration(500)} style={styles.settingsContainer}>
           {settings.map((item, index) => (
-            <TouchableOpacity key={index} style={styles.settingItem}>
-              <Ionicons name={item.icon as any} size={22} color={LPColors.neon} />
+            <TouchableOpacity
+              key={index}
+              style={styles.settingItem}
+              onPress={() => item.route && router.push(item.route as any)}
+            >
+              <Ionicons name={item.icon as any} size={22} color={LPColors.primary} />
               <Text style={styles.settingName}>{item.name}</Text>
-              <Ionicons name="chevron-forward" size={20} color="#666" />
+              <Ionicons name="chevron-forward" size={20} color={LPColors.textGray} />
             </TouchableOpacity>
           ))}
-        </View>
+        </Animated.View>
 
         {/* Logout */}
-        <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+        <Animated.View entering={FadeInDown.delay(600).duration(500)}>
+          <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000" },
+  container: { flex: 1, backgroundColor: '#0A0A0A' },
 
   profileHeader: {
     alignItems: "center",
     paddingVertical: 20,
     paddingHorizontal: 20,
-    backgroundColor: "#121212",
+    backgroundColor: LPColors.surfaceLight,
     margin: 16,
-    borderRadius: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
 
   avatar: {
@@ -189,19 +204,19 @@ const styles = StyleSheet.create({
     height: 90,
     borderRadius: 45,
     borderWidth: 2,
-    borderColor: "#39FF14",
+    borderColor: LPColors.primary,
     marginBottom: 12,
   },
 
   avatarFallback: {
-    backgroundColor: "#1e1e1e",
+    backgroundColor: LPColors.surface,
     justifyContent: "center",
     alignItems: "center",
   },
 
   avatarInitial: {
     fontSize: 36,
-    color: "#39FF14",
+    color: LPColors.primary,
     fontWeight: "700",
   },
 
@@ -210,12 +225,12 @@ const styles = StyleSheet.create({
     top: 20,
     right: 20,
     backgroundColor: "rgba(0,0,0,0.4)",
-    padding: 6,
-    borderRadius: 15,
+    padding: 8,
+    borderRadius: 20,
   },
 
-  name: { fontSize: 22, fontWeight: "bold", color: "#fff" },
-  since: { fontSize: 14, color: "#888", marginTop: 4 },
+  name: { fontSize: 22, fontWeight: "bold", color: LPColors.text },
+  since: { fontSize: 14, color: LPColors.textGray, marginTop: 4 },
 
   statsContainer: {
     flexDirection: "row",
@@ -225,18 +240,20 @@ const styles = StyleSheet.create({
   },
 
   statBox: {
-    backgroundColor: "#1E1E1E",
-    borderRadius: 12,
-    paddingVertical: 12,
+    backgroundColor: LPColors.surfaceLight,
+    borderRadius: 16,
+    paddingVertical: 16,
     paddingHorizontal: 16,
     alignItems: "center",
     width: "31%",
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
 
-  statLabel: { fontSize: 12, color: "#888", marginTop: 4 },
-  statValue: { fontSize: 16, fontWeight: "bold", color: "#fff", marginTop: 2 },
+  statLabel: { fontSize: 12, color: LPColors.textGray, marginTop: 4 },
+  statValue: { fontSize: 16, fontWeight: "bold", color: LPColors.text, marginTop: 2 },
 
-  section: { marginTop: 20, paddingHorizontal: 16 },
+  section: { marginTop: 24, paddingHorizontal: 16 },
 
   sectionHeader: {
     flexDirection: "row",
@@ -245,25 +262,24 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
-  sectionTitle: { fontSize: 18, fontWeight: "bold", color: "#fff" },
-  keepGoing: { fontSize: 14, color: LPColors.neon, fontWeight: "600" },
+  sectionTitle: { fontSize: 20, fontWeight: "bold", color: LPColors.text },
+  keepGoing: { fontSize: 14, color: LPColors.primary, fontWeight: "600" },
 
   overviewContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 16,
+    marginTop: 8,
   },
 
   overviewBox: {
-    backgroundColor: "#39FF14",
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     width: "32%",
     alignItems: "center",
   },
 
-  overviewLabel: { fontSize: 12, color: "#000", marginBottom: 8 },
-  overviewValue: { fontSize: 20, fontWeight: "800", color: "#000" },
+  overviewLabel: { fontSize: 11, color: "#000", marginBottom: 8, textAlign: 'center', fontWeight: '500' },
+  overviewValue: { fontSize: 18, fontWeight: "800", color: "#000" },
 
   badgesContainer: {
     flexDirection: "row",
@@ -271,51 +287,63 @@ const styles = StyleSheet.create({
   },
 
   badge: {
-    backgroundColor: "#39FF14",
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     width: "23%",
     alignItems: "center",
   },
 
-  badgeText: { fontSize: 12, color: "#000", marginTop: 8 },
+  badgeLocked: {
+    borderRadius: 16,
+    padding: 16,
+    width: "23%",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+
+  badgeText: { fontSize: 11, color: "#000", marginTop: 8, fontWeight: 'bold' },
+  badgeTextLocked: { fontSize: 11, color: LPColors.textGray, marginTop: 8 },
 
   settingsContainer: {
     marginTop: 20,
     marginHorizontal: 16,
-    backgroundColor: "#1E1E1E",
-    borderRadius: 12,
+    backgroundColor: LPColors.surfaceLight,
+    borderRadius: 20,
     marginBottom: 20,
+    overflow: 'hidden',
   },
 
   settingItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 18,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#2A3B44",
+    borderBottomColor: 'rgba(255,255,255,0.05)',
   },
 
   settingName: {
     fontSize: 16,
-    color: "#fff",
+    color: LPColors.text,
     marginLeft: 16,
     flex: 1,
   },
 
   logoutButton: {
-    backgroundColor: "#ff3b30",
+    backgroundColor: "#2C0000", // Dark red specifically for dark mode
     marginHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 10,
+    paddingVertical: 16,
+    borderRadius: 16,
     alignItems: "center",
     marginBottom: 40,
+    borderWidth: 1,
+    borderColor: '#FF3B30',
   },
 
   logoutText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#fff",
+    color: "#FF3B30",
   },
 });

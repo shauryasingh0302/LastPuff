@@ -1,7 +1,7 @@
 // app/(tabs)/explore.tsx
 
 import React, { useEffect, useState, useContext } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, FlatList } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LPColors } from "../../constants/theme";
 import PostCard from "../../components/PostCard";
@@ -9,6 +9,9 @@ import { fetchFeed, fetchMyPosts, toggleLike, deletePost } from "../../services/
 import { Post } from "../../types/post";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { AuthContext } from "../../context/AuthContext";
+import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function ExploreScreen() {
   const auth: any = useContext(AuthContext);
@@ -49,7 +52,6 @@ export default function ExploreScreen() {
   useEffect(() => {
     if (params.refresh === "1") {
       loadPosts();
-
       // Remove refresh param so it doesn't loop
       router.replace("/(tabs)/explore");
     }
@@ -68,89 +70,153 @@ export default function ExploreScreen() {
   };
 
   const handleDelete = async (postId: string) => {
-    await deletePost(postId
-    );
+    await deletePost(postId);
     loadPosts();
   };
+
+  const renderItem = ({ item, index }: { item: Post; index: number }) => (
+    <Animated.View entering={FadeInDown.delay(index * 100).duration(400)} layout={Layout.springify()}>
+      <PostCard
+        post={item}
+        onLike={handleLike}
+        onComment={handleComment}
+        onDelete={handleDelete}
+        isOwn={item.author?._id === user?._id}
+      />
+    </Animated.View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Community</Text>
 
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => router.push("/community/AddPost")}
-        >
-          <Text style={{ color: LPColors.bg, fontWeight: "700" }}>Create</Text>
+        <TouchableOpacity onPress={() => router.push("/community/AddPost")}>
+          <LinearGradient
+            colors={[LPColors.primary, '#004d2c']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.addButton}
+          >
+            <Ionicons name="add" size={20} color="#000" />
+            <Text style={styles.addButtonText}>Create</Text>
+          </LinearGradient>
         </TouchableOpacity>
       </View>
 
       {/* Tabs */}
-      <View style={styles.tabs}>
-        <TouchableOpacity
-          onPress={() => setTab("all")}
-          style={[styles.tab, tab === "all" && styles.tabActive]}
-        >
-          <Text style={tab === "all" ? styles.tabTextActive : styles.tabText}>
-            All
-          </Text>
-        </TouchableOpacity>
+      <View style={styles.tabContainer}>
+        <View style={styles.tabsBackground}>
+          <TouchableOpacity
+            onPress={() => setTab("all")}
+            style={[styles.tab, tab === "all" && styles.tabActive]}
+          >
+            <Text style={tab === "all" ? styles.tabTextActive : styles.tabText}>
+              All Posts
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => setTab("mine")}
-          style={[styles.tab, tab === "mine" && styles.tabActive]}
-        >
-          <Text style={tab === "mine" ? styles.tabTextActive : styles.tabText}>
-            My Posts
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setTab("mine")}
+            style={[styles.tab, tab === "mine" && styles.tabActive]}
+          >
+            <Text style={tab === "mine" ? styles.tabTextActive : styles.tabText}>
+              My Posts
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Posts */}
-      <ScrollView style={{ padding: 16 }}>
-        {loading ? (
-          <Text style={{ color: LPColors.gray, textAlign: "center", marginTop: 20 }}>
-            Loading posts...
-          </Text>
-        ) : posts.length === 0 ? (
-          <Text style={{ color: LPColors.gray, textAlign: "center", marginTop: 20 }}>
-            No posts available
-          </Text>
-        ) : (
-          posts.map((post) => (
-            <PostCard
-              key={post._id}
-              post={post}
-              onLike={handleLike}
-              onComment={handleComment}
-              onDelete={handleDelete}
-              isOwn={post.author?._id === user?._id}
-            />
-          ))
-        )}
-      </ScrollView>
+      {loading ? (
+        <View style={styles.centerContainer}>
+          <Text style={styles.loadingText}>Loading community feed...</Text>
+        </View>
+      ) : posts.length === 0 ? (
+        <View style={styles.centerContainer}>
+          <Ionicons name="chatbubbles-outline" size={48} color={LPColors.textGray} />
+          <Text style={styles.emptyText}>No posts yet. Be the first!</Text>
+        </View>
+      ) : (
+        <Animated.FlatList
+          data={posts}
+          keyExtractor={(item) => item._id}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          itemLayoutAnimation={Layout.springify()}
+        />
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: LPColors.bg },
-  header: { flexDirection: "row", justifyContent: "space-between", padding: 16 },
-  title: { color: LPColors.neon, fontSize: 22, fontWeight: "700" },
-  addButton: {
-    backgroundColor: LPColors.neon,
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-  },
-  tabs: {
+  container: { flex: 1, backgroundColor: '#0A0A0A' },
+  header: {
     flexDirection: "row",
-    paddingHorizontal: 16,
-    marginBottom: 6,
+    justifyContent: "space-between",
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
-  tab: { paddingHorizontal: 12, paddingVertical: 8, marginRight: 12 },
-  tabActive: { borderBottomWidth: 2, borderBottomColor: LPColors.neon },
-  tabText: { color: LPColors.gray },
-  tabTextActive: { color: LPColors.neon, fontWeight: "700" },
+  title: { color: LPColors.text, fontSize: 28, fontWeight: "bold" },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    gap: 4,
+  },
+  addButtonText: {
+    color: '#000',
+    fontWeight: "700",
+    fontSize: 14,
+  },
+  tabContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  tabsBackground: {
+    flexDirection: "row",
+    backgroundColor: LPColors.surfaceLight,
+    borderRadius: 12,
+    padding: 4,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 10,
+  },
+  tabActive: {
+    backgroundColor: LPColors.surface, // Brighter card color for active tab
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  tabText: { color: LPColors.textGray, fontWeight: '500' },
+  tabTextActive: { color: LPColors.primary, fontWeight: "700" },
+
+  listContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
+  centerContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    opacity: 0.7,
+  },
+  loadingText: {
+    color: LPColors.textGray,
+    marginTop: 10,
+  },
+  emptyText: {
+    color: LPColors.textGray,
+    marginTop: 12,
+    fontSize: 16,
+  },
 });

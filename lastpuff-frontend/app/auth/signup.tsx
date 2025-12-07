@@ -1,8 +1,11 @@
 import React, { useState, useContext } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import API from "../../services/api";
 import { useRouter } from "expo-router";
 import { AuthContext } from "../../context/AuthContext";
+import { LPColors } from "../../constants/theme";
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
 interface AuthResponse {
   token: string;
@@ -44,81 +47,152 @@ export default function SignupScreen() {
 
       const res = await API.post<AuthResponse>("/auth/signup", payload);
       await auth.loginUser(res.data.user, res.data.token);
-      router.replace("/" as any);
+
+      // 🚀 Redirect to onboarding for new users to set up their plan
+      router.replace("/onboarding/questionnaire");
     } catch (err: any) {
-  console.log("FULL SIGNUP ERROR:", JSON.stringify(err, null, 2));
-  console.log("ERROR RESPONSE:", err.response?.data);
-  setError(err.response?.data?.message || err.message || "Signup failed");
-} finally {
-  setLoading(false);
-}
+      console.log("FULL SIGNUP ERROR:", JSON.stringify(err, null, 2));
+      setError(err.response?.data?.message || err.message || "Signup failed");
+    } finally {
+      setLoading(false);
+    }
 
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Create Account</Text>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.headerContainer}>
+          <View style={styles.iconCircle}>
+            <Ionicons name="person-add-outline" size={40} color={LPColors.primary} />
+          </View>
+          <Text style={styles.title}>Join LastPuff</Text>
+          <Text style={styles.subtitle}>Start your smoke-free journey today</Text>
+        </View>
 
-      <TextInput
-        placeholder="Name"
-        placeholderTextColor="#888"
-        style={styles.input}
-        onChangeText={(v) => handleChange("name", v)}
-      />
-      <TextInput
-        placeholder="Email"
-        placeholderTextColor="#888"
-        style={styles.input}
-        onChangeText={(v) => handleChange("email", v)}
-      />
-      <TextInput
-        placeholder="Password"
-        placeholderTextColor="#888"
-        secureTextEntry
-        style={styles.input}
-        onChangeText={(v) => handleChange("password", v)}
-      />
-      <TextInput
-        placeholder="Age"
-        placeholderTextColor="#888"
-        keyboardType="numeric"
-        style={styles.input}
-        onChangeText={(v) => handleChange("age", v)}
-      />
-      <TextInput
-        placeholder="Height (cm)"
-        placeholderTextColor="#888"
-        keyboardType="numeric"
-        style={styles.input}
-        onChangeText={(v) => handleChange("height", v)}
-      />
-      <TextInput
-        placeholder="Weight (kg)"
-        placeholderTextColor="#888"
-        keyboardType="numeric"
-        style={styles.input}
-        onChangeText={(v) => handleChange("weight", v)}
-      />
+        <View style={styles.inputContainer}>
+          <Ionicons name="person-outline" size={20} color={LPColors.textGray} style={styles.inputIcon} />
+          <TextInput
+            placeholder="Name"
+            placeholderTextColor={LPColors.textGray}
+            style={styles.input}
+            onChangeText={(v) => handleChange("name", v)}
+          />
+        </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+        <View style={styles.inputContainer}>
+          <Ionicons name="mail-outline" size={20} color={LPColors.textGray} style={styles.inputIcon} />
+          <TextInput
+            placeholder="Email"
+            placeholderTextColor={LPColors.textGray}
+            style={styles.input}
+            onChangeText={(v) => handleChange("email", v)}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </View>
 
-      <TouchableOpacity style={styles.button} onPress={onSignup} disabled={loading}>
-        <Text style={styles.buttonText}>{loading ? "Creating..." : "Sign Up"}</Text>
-      </TouchableOpacity>
+        <View style={styles.inputContainer}>
+          <Ionicons name="lock-closed-outline" size={20} color={LPColors.textGray} style={styles.inputIcon} />
+          <TextInput
+            placeholder="Password"
+            placeholderTextColor={LPColors.textGray}
+            secureTextEntry
+            style={styles.input}
+            onChangeText={(v) => handleChange("password", v)}
+          />
+        </View>
 
-      <TouchableOpacity onPress={() => router.push("/auth/login")}>
-        <Text style={styles.switchText}>Already have an account? Login</Text>
-      </TouchableOpacity>
-    </View>
+        <View style={styles.row}>
+          <View style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}>
+            <TextInput
+              placeholder="Age"
+              placeholderTextColor={LPColors.textGray}
+              keyboardType="numeric"
+              style={styles.inputCentered}
+              onChangeText={(v) => handleChange("age", v)}
+            />
+          </View>
+          <View style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}>
+            <TextInput
+              placeholder="H (cm)"
+              placeholderTextColor={LPColors.textGray}
+              keyboardType="numeric"
+              style={styles.inputCentered}
+              onChangeText={(v) => handleChange("height", v)}
+            />
+          </View>
+          <View style={[styles.inputContainer, { flex: 1 }]}>
+            <TextInput
+              placeholder="W (kg)"
+              placeholderTextColor={LPColors.textGray}
+              keyboardType="numeric"
+              style={styles.inputCentered}
+              onChangeText={(v) => handleChange("weight", v)}
+            />
+          </View>
+        </View>
+
+
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+
+        <TouchableOpacity onPress={onSignup} disabled={loading}>
+          <LinearGradient
+            colors={[LPColors.primary, '#004d2c']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.button}
+          >
+            <Text style={styles.buttonText}>{loading ? "Creating Account..." : "Sign Up"}</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.push("/auth/login")}>
+          <Text style={styles.switchText}>Already have an account? <Text style={{ fontWeight: 'bold', color: LPColors.primary }}>Login</Text></Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000", justifyContent: "center", padding: 20 },
-  title: { color: "#39FF14", fontSize: 28, fontWeight: "bold", textAlign: "center", marginBottom: 20 },
-  input: { borderWidth: 1, borderColor: "#39FF14", borderRadius: 10, padding: 12, color: "#fff", marginBottom: 12 },
-  button: { backgroundColor: "#39FF14", padding: 15, borderRadius: 10, marginTop: 10 },
-  buttonText: { color: "#000", fontWeight: "bold", textAlign: "center" },
-  switchText: { color: "#39FF14", marginTop: 15, textAlign: "center" },
-  error: { color: "red", textAlign: "center", marginBottom: 10 },
+  container: { flex: 1, backgroundColor: '#0A0A0A' },
+  scrollContent: { padding: 24, justifyContent: 'center', minHeight: '100%' },
+  headerContainer: { alignItems: 'center', marginBottom: 32 },
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(57, 255, 20, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: LPColors.primary,
+  },
+  title: { color: LPColors.text, fontSize: 32, fontWeight: "bold", textAlign: "center", marginBottom: 8 },
+  subtitle: { color: LPColors.textGray, fontSize: 16, textAlign: "center" },
+
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: LPColors.surfaceLight,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  inputIcon: { marginLeft: 16, marginRight: 8 },
+  input: { flex: 1, padding: 16, color: LPColors.text, fontSize: 16 },
+  inputCentered: { flex: 1, padding: 16, color: LPColors.text, fontSize: 16, textAlign: 'center' },
+  row: { flexDirection: 'row', justifyContent: 'space-between' },
+
+  button: { padding: 18, borderRadius: 12, alignItems: 'center', marginTop: 16 },
+  buttonText: { color: "#000", fontWeight: "bold", fontSize: 16 },
+
+  switchText: { color: LPColors.textGray, marginTop: 24, textAlign: "center", fontSize: 14 },
+  error: { color: "#FF3B30", textAlign: "center", marginBottom: 16 },
 });

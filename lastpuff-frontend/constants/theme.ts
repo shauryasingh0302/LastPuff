@@ -30,12 +30,30 @@ export const Colors = {
  * Always available — ignores system theme.
  */
 export const LPColors = {
-  bg: "#000000",
-  card: "#111111",
-  neon: "#39FF14",
+  // Core Interface
+  bg: "#040B07",        // Very deep dark green (almost black)
+  surface: "#0D1F16",   // Dark green for cards
+  surfaceLight: "#162E23", // Lighter green for elevated surfaces
+
+  // Accents
+  primary: "#39FF14",   // High-vis neon green
+  secondary: "#00CF85", // Teal/Mint accent
+
+  // Text
   text: "#FFFFFF",
-  gray: "#8B8B8B",
-  border: "#1A1A1A",
+  textGray: "#A0AEC0",
+  textMuted: "#6B7280",
+
+  // States
+  border: "#1F382A",
+  success: "#39FF14",
+  error: "#FF453A",
+  warning: "#FFD60A",
+
+  // Legacy mappings for backward compatibility
+  neon: "#39FF14",
+  card: "#0D1F16",
+  gray: "#A0AEC0",
 };
 
 export const Fonts = Platform.select({

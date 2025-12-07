@@ -11,6 +11,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { useGoals } from "../context/GoalsContext";
+import { LPColors } from "../constants/theme";
 
 // compulsory 5 goals always shown
 const compulsoryGoalsList = [
@@ -30,17 +32,12 @@ const suggestedGoalsList = [
 ];
 
 export default function GoalsScreen() {
-  const [customGoals, setCustomGoals] = useState<any[]>([]);
+  const { goals, addGoal, deleteGoal } = useGoals();
   const [modalVisible, setModalVisible] = useState(false);
   const [customGoal, setCustomGoal] = useState("");
 
-  const deleteGoal = (index: number) => {
-    const updated = customGoals.filter((_, i) => i !== index);
-    setCustomGoals(updated);
-  };
-
-  const addGoal = (goal: any) => {
-    setCustomGoals([...customGoals, goal]);
+  const handleAddGoal = (goalData: { icon: string; text: string }) => {
+    addGoal({ ...goalData, completed: false, isCustom: true });
     setModalVisible(false);
     setCustomGoal("");
   };
@@ -49,7 +46,7 @@ export default function GoalsScreen() {
     <SafeAreaView style={styles.container}>
       {/* HEADER SAME STYLE AS SOS */}
       <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-        <Ionicons name="chevron-back" size={28} color="#39FF14" />
+        <Ionicons name="chevron-back" size={28} color={LPColors.primary} />
       </TouchableOpacity>
 
       <Text style={styles.title}>Goals</Text>
@@ -60,24 +57,21 @@ export default function GoalsScreen() {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Daily Goals</Text>
 
-          {/* compulsory goals */}
-          {compulsoryGoalsList.map((goal, index) => (
-            <View key={`comp-${index}`} style={styles.goalItem}>
-              <Ionicons name={goal.icon as any} size={22} color="#39FF14" />
-              <Text style={styles.goalText}>{goal.text}</Text>
-            </View>
-          ))}
-
-          {/* custom user added goals */}
-          {customGoals.map((goal, index) => (
-            <View key={`custom-${index}`} style={styles.goalItem}>
-              <Ionicons name={goal.icon as any} size={22} color="#39FF14" />
-              <Text style={styles.goalText}>{goal.text}</Text>
-
-              {/* delete custom goal */}
-              <TouchableOpacity onPress={() => deleteGoal(index)} style={styles.deleteBtn}>
-                <Ionicons name="trash-outline" size={20} color="#ff3b30" />
-              </TouchableOpacity>
+          {/* All goals from context */}
+          {goals.map((goal) => (
+            <View key={goal.id} style={styles.goalItem}>
+              <Ionicons name={(goal.icon || "create-outline") as any} size={22} color={LPColors.primary} />
+              <Text style={[styles.goalText, goal.completed && { textDecorationLine: 'line-through', opacity: 0.6 }]}>
+                {goal.text}
+              </Text>
+              {goal.completed && (
+                <Ionicons name="checkmark-circle" size={20} color={LPColors.primary} style={{ marginLeft: 'auto' }} />
+              )}
+              {goal.isCustom && !goal.completed && (
+                <TouchableOpacity onPress={() => deleteGoal(goal.id)} style={styles.deleteBtn}>
+                  <Ionicons name="trash-outline" size={20} color="#ff3b30" />
+                </TouchableOpacity>
+              )}
             </View>
           ))}
 
@@ -99,9 +93,9 @@ export default function GoalsScreen() {
               <TouchableOpacity
                 key={index}
                 style={styles.modalGoalItem}
-                onPress={() => addGoal(goal)}
+                onPress={() => handleAddGoal(goal)}
               >
-                <Ionicons name={goal.icon as any} size={22} color="#39FF14" />
+                <Ionicons name={goal.icon as any} size={22} color={LPColors.primary} />
                 <Text style={styles.modalGoalText}>{goal.text}</Text>
               </TouchableOpacity>
             ))}
@@ -118,7 +112,7 @@ export default function GoalsScreen() {
             <TouchableOpacity
               style={[styles.addButton, { marginTop: 10 }]}
               onPress={() =>
-                customGoal.trim() && addGoal({ icon: "create-outline", text: customGoal })
+                customGoal.trim() && handleAddGoal({ icon: "create-outline", text: customGoal })
               }
             >
               <Text style={styles.addButtonText}>Add</Text>
@@ -136,28 +130,28 @@ export default function GoalsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000", paddingHorizontal: 20 },
+  container: { flex: 1, backgroundColor: LPColors.bg, paddingHorizontal: 20 },
   backBtn: { marginTop: 10, marginBottom: 10, width: 40 },
-  title: { color: "#39FF14", fontSize: 32, fontWeight: "bold", marginBottom: 6 },
-  subtitle: { color: "#fff", fontSize: 14, marginBottom: 20 },
+  title: { color: LPColors.primary, fontSize: 32, fontWeight: "bold", marginBottom: 6 },
+  subtitle: { color: LPColors.text, fontSize: 14, marginBottom: 20 },
   scrollContent: { paddingBottom: 80 },
 
-  card: { backgroundColor: "#121212", borderRadius: 16, padding: 16, marginBottom: 20 },
-  cardTitle: { fontSize: 20, fontWeight: "bold", color: "#fff", marginBottom: 16 },
+  card: { backgroundColor: LPColors.surface, borderRadius: 16, padding: 16, marginBottom: 20 },
+  cardTitle: { fontSize: 20, fontWeight: "bold", color: LPColors.text, marginBottom: 16 },
 
   goalItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1E1E1E",
+    backgroundColor: LPColors.surfaceLight,
     borderRadius: 12,
     padding: 16,
     marginBottom: 10,
   },
-  goalText: { flex: 1, fontSize: 16, color: "#fff", marginLeft: 12 },
+  goalText: { flex: 1, fontSize: 16, color: LPColors.text, marginLeft: 12 },
   deleteBtn: { padding: 4 },
 
   addButton: {
-    backgroundColor: "#39FF14",
+    backgroundColor: LPColors.primary,
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 20,
@@ -168,21 +162,21 @@ const styles = StyleSheet.create({
 
   modalContainer: { flex: 1, backgroundColor: "rgba(0,0,0,0.6)", justifyContent: "flex-end" },
   modalContent: {
-    backgroundColor: "#121212",
+    backgroundColor: LPColors.surface,
     padding: 20,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
   },
-  modalTitle: { fontSize: 22, color: "#fff", fontWeight: "bold", marginBottom: 16 },
+  modalTitle: { fontSize: 22, color: LPColors.text, fontWeight: "bold", marginBottom: 16 },
   modalGoalItem: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 12,
   },
-  modalGoalText: { color: "#fff", fontSize: 16, marginLeft: 10 },
+  modalGoalText: { color: LPColors.text, fontSize: 16, marginLeft: 10 },
   input: {
-    backgroundColor: "#1E1E1E",
-    color: "#fff",
+    backgroundColor: LPColors.surfaceLight,
+    color: LPColors.text,
     borderRadius: 10,
     padding: 12,
     marginTop: 10,
