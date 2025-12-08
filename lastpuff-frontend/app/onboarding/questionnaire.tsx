@@ -8,7 +8,15 @@ import { AuthContext } from '../../context/AuthContext';
 import { PlanType, useGoals } from '../../context/GoalsContext';
 import API from '../../services/api';
 
-const QUESTIONS = [
+// First question to determine user type
+const SMOKER_QUESTION = {
+    id: 0,
+    text: "Are you a smoker?",
+    options: ["Yes, I smoke", "No, I don't smoke"]
+};
+
+// Smoking-related questions (only shown if user is a smoker)
+const SMOKING_QUESTIONS = [
     {
         id: 1,
         text: "How many cigarettes do you smoke per day?",
@@ -71,11 +79,13 @@ export default function QuestionnaireScreen() {
     const auth: any = useContext(AuthContext);
     const params = useLocalSearchParams();
 
-    const [currentStep, setCurrentStep] = useState(0);
+    // -1 means we're on the smoker question, 0+ means we're on smoking questions
+    const [currentStep, setCurrentStep] = useState(-1);
     const [answers, setAnswers] = useState<Record<number, string>>({});
     const [showPlans, setShowPlans] = useState(false);
     const [isCreatingAccount, setIsCreatingAccount] = useState(false);
     const [signupData, setSignupData] = useState<any>(null);
+    const [isSmoker, setIsSmoker] = useState<boolean | null>(null);
 
     // Parse signup data on mount
     useEffect(() => {
@@ -93,13 +103,33 @@ export default function QuestionnaireScreen() {
         }
     }, [params.signupData]);
 
-    // Calculate progress
-    const progress = ((currentStep + 1) / QUESTIONS.length) * 100;
+    // Calculate progress (smoker question + smoking questions if smoker)
+    const totalQuestions = isSmoker === false ? 1 : 1 + SMOKING_QUESTIONS.length;
+    const currentQuestionNumber = currentStep + 2; // +2 because step starts at -1
+    const progress = (currentQuestionNumber / totalQuestions) * 100;
+
+    const handleSmokerAnswer = (answer: string) => {
+        const userIsSmoker = answer === "Yes, I smoke";
+        setIsSmoker(userIsSmoker);
+
+        // Update signup data with isSmoker
+        if (signupData) {
+            setSignupData({ ...signupData, isSmoker: userIsSmoker });
+        }
+
+        if (userIsSmoker) {
+            // Continue to smoking questions
+            setTimeout(() => setCurrentStep(0), 250);
+        } else {
+            // Skip to non-smoker plan selection
+            setTimeout(() => setShowPlans(true), 250);
+        }
+    };
 
     const handleAnswer = (answer: string) => {
-        setAnswers({ ...answers, [QUESTIONS[currentStep].id]: answer });
+        setAnswers({ ...answers, [SMOKING_QUESTIONS[currentStep].id]: answer });
 
-        if (currentStep < QUESTIONS.length - 1) {
+        if (currentStep < SMOKING_QUESTIONS.length - 1) {
             setTimeout(() => setCurrentStep(currentStep + 1), 250);
         } else {
             setShowPlans(true);
@@ -107,15 +137,22 @@ export default function QuestionnaireScreen() {
     };
 
     const handleSelectPlan = async (plan: PlanType) => {
-        console.log('[Questionnaire] handleSelectPlan called, plan:', plan, 'signupData:', signupData ? 'YES' : 'NO');
+        console.log('[Questionnaire] handleSelectPlan called, plan:', plan, 'isSmoker:', isSmoker, 'signupData:', signupData ? 'YES' : 'NO');
 
         // If we have signup data, create the account now
         if (signupData) {
             setIsCreatingAccount(true);
             try {
-                console.log('[Questionnaire] Creating account for:', signupData.email);
+                // Add isSmoker and plan to signup data
+                const finalSignupData = {
+                    ...signupData,
+                    isSmoker: isSmoker,
+                    plan: isSmoker ? (plan === 'cold-turkey' ? 'aggressive' : 'gradual') : 'none'
+                };
+
+                console.log('[Questionnaire] Creating account for:', finalSignupData.email, 'isSmoker:', finalSignupData.isSmoker);
                 // Create the user account
-                const res = await API.post<SignupResponse>("/auth/signup", signupData);
+                const res = await API.post<SignupResponse>("/auth/signup", finalSignupData);
                 const { user, token } = res.data;
                 console.log('[Questionnaire] Account created successfully');
 
@@ -182,62 +219,99 @@ export default function QuestionnaireScreen() {
                     </View>
                 )}
                 <ScrollView contentContainerStyle={styles.scrollContent}>
-                    <Text style={styles.planTitle}>Choose Your Path</Text>
-                    <Text style={styles.planSubtitle}>
-                        {signupData
-                            ? "Select a plan to complete your signup!"
-                            : "Select your quit smoking approach."}
-                    </Text>
-
-                    {/* Cold Turkey Card */}
-                    <View style={styles.planCard}>
-                        <View style={[styles.iconCircle, { backgroundColor: 'rgba(255, 59, 48, 0.1)' }]}>
-                            <Ionicons name="flash" size={32} color="#FF3B30" />
-                        </View>
-                        <Text style={styles.cardTitle}>Cold Turkey</Text>
-                        <Text style={styles.cardDesc}>
-                            Stop smoking completely right now. Best for highly motivated individuals.
-                        </Text>
-                        <View style={styles.benefitList}>
-                            <Text style={styles.benefitItem}>• Instant health benefits</Text>
-                            <Text style={styles.benefitItem}>• Break the addiction faster</Text>
-                            <Text style={styles.benefitItem}>• Requires high willpower</Text>
-                        </View>
-                        <TouchableOpacity
-                            style={[styles.selectButton, { backgroundColor: '#FF3B30' }, isCreatingAccount && styles.buttonDisabled]}
-                            onPress={() => handleSelectPlan('cold-turkey')}
-                            disabled={isCreatingAccount}
-                        >
-                            <Text style={styles.selectButtonText}>
-                                {isCreatingAccount ? 'Creating Account...' : 'Select Cold Turkey'}
+                    {/* Different content for smokers vs non-smokers */}
+                    {isSmoker ? (
+                        <>
+                            <Text style={styles.planTitle}>Choose Your Path</Text>
+                            <Text style={styles.planSubtitle}>
+                                {signupData
+                                    ? "Select a plan to complete your signup!"
+                                    : "Select your quit smoking approach."}
                             </Text>
-                        </TouchableOpacity>
-                    </View>
 
-                    {/* Gradual Reduction Card */}
-                    <View style={styles.planCard}>
-                        <View style={[styles.iconCircle, { backgroundColor: 'rgba(57, 255, 20, 0.1)' }]}>
-                            <Ionicons name="trending-down" size={32} color={LPColors.primary} />
-                        </View>
-                        <Text style={styles.cardTitle}>Gradual Reduction</Text>
-                        <Text style={styles.cardDesc}>
-                            Slowly reduce cigarettes over time. Best for heavy smokers.
-                        </Text>
-                        <View style={styles.benefitList}>
-                            <Text style={styles.benefitItem}>• Less intense withdrawal</Text>
-                            <Text style={styles.benefitItem}>• Build confidence slowly</Text>
-                            <Text style={styles.benefitItem}>• Easier to start</Text>
-                        </View>
-                        <TouchableOpacity
-                            style={[styles.selectButton, { backgroundColor: LPColors.primary }, isCreatingAccount && styles.buttonDisabled]}
-                            onPress={() => handleSelectPlan('gradual')}
-                            disabled={isCreatingAccount}
-                        >
-                            <Text style={[styles.selectButtonText, { color: '#000' }]}>
-                                {isCreatingAccount ? 'Creating Account...' : 'Select Gradual'}
+                            {/* Cold Turkey Card */}
+                            <View style={styles.planCard}>
+                                <View style={[styles.iconCircle, { backgroundColor: 'rgba(255, 59, 48, 0.1)' }]}>
+                                    <Ionicons name="flash" size={32} color="#FF3B30" />
+                                </View>
+                                <Text style={styles.cardTitle}>Cold Turkey</Text>
+                                <Text style={styles.cardDesc}>
+                                    Stop smoking completely right now. Best for highly motivated individuals.
+                                </Text>
+                                <View style={styles.benefitList}>
+                                    <Text style={styles.benefitItem}>• Instant health benefits</Text>
+                                    <Text style={styles.benefitItem}>• Break the addiction faster</Text>
+                                    <Text style={styles.benefitItem}>• Requires high willpower</Text>
+                                </View>
+                                <TouchableOpacity
+                                    style={[styles.selectButton, { backgroundColor: '#FF3B30' }, isCreatingAccount && styles.buttonDisabled]}
+                                    onPress={() => handleSelectPlan('cold-turkey')}
+                                    disabled={isCreatingAccount}
+                                >
+                                    <Text style={styles.selectButtonText}>
+                                        {isCreatingAccount ? 'Creating Account...' : 'Select Cold Turkey'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* Gradual Reduction Card */}
+                            <View style={styles.planCard}>
+                                <View style={[styles.iconCircle, { backgroundColor: 'rgba(57, 255, 20, 0.1)' }]}>
+                                    <Ionicons name="trending-down" size={32} color={LPColors.primary} />
+                                </View>
+                                <Text style={styles.cardTitle}>Gradual Reduction</Text>
+                                <Text style={styles.cardDesc}>
+                                    Slowly reduce cigarettes over time. Best for heavy smokers.
+                                </Text>
+                                <View style={styles.benefitList}>
+                                    <Text style={styles.benefitItem}>• Less intense withdrawal</Text>
+                                    <Text style={styles.benefitItem}>• Build confidence slowly</Text>
+                                    <Text style={styles.benefitItem}>• Easier to start</Text>
+                                </View>
+                                <TouchableOpacity
+                                    style={[styles.selectButton, { backgroundColor: LPColors.primary }, isCreatingAccount && styles.buttonDisabled]}
+                                    onPress={() => handleSelectPlan('gradual')}
+                                    disabled={isCreatingAccount}
+                                >
+                                    <Text style={[styles.selectButtonText, { color: '#000' }]}>
+                                        {isCreatingAccount ? 'Creating Account...' : 'Select Gradual'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </>
+                    ) : (
+                        <>
+                            {/* Non-smoker Fitness Plan */}
+                            <Text style={styles.planTitle}>Welcome! 🎉</Text>
+                            <Text style={styles.planSubtitle}>
+                                Great news - you&apos;re not a smoker! Let&apos;s focus on keeping you active and healthy.
                             </Text>
-                        </TouchableOpacity>
-                    </View>
+
+                            <View style={styles.planCard}>
+                                <View style={[styles.iconCircle, { backgroundColor: 'rgba(57, 255, 20, 0.1)' }]}>
+                                    <Ionicons name="fitness" size={32} color={LPColors.primary} />
+                                </View>
+                                <Text style={styles.cardTitle}>Fitness Focus</Text>
+                                <Text style={styles.cardDesc}>
+                                    Stay active with our activity monitoring features. We&apos;ll help you move more throughout the day.
+                                </Text>
+                                <View style={styles.benefitList}>
+                                    <Text style={styles.benefitItem}>• Activity monitoring alerts</Text>
+                                    <Text style={styles.benefitItem}>• Reminder to move when sedentary</Text>
+                                    <Text style={styles.benefitItem}>• Track your daily activity</Text>
+                                </View>
+                                <TouchableOpacity
+                                    style={[styles.selectButton, { backgroundColor: LPColors.primary }, isCreatingAccount && styles.buttonDisabled]}
+                                    onPress={() => handleSelectPlan('gradual')}
+                                    disabled={isCreatingAccount}
+                                >
+                                    <Text style={[styles.selectButtonText, { color: '#000' }]}>
+                                        {isCreatingAccount ? 'Creating Account...' : 'Start My Fitness Journey'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
+                        </>
+                    )}
 
                     {/* Cancel button */}
                     <TouchableOpacity
@@ -252,8 +326,11 @@ export default function QuestionnaireScreen() {
         );
     }
 
-    // Questions screen
-    const currentQuestion = QUESTIONS[currentStep];
+    // Determine which question to show
+    const isOnSmokerQuestion = currentStep === -1;
+    const currentQuestion = isOnSmokerQuestion ? SMOKER_QUESTION : SMOKING_QUESTIONS[currentStep];
+    const displayStep = isOnSmokerQuestion ? 1 : currentStep + 2;
+    const displayTotal = isOnSmokerQuestion ? 1 : 1 + SMOKING_QUESTIONS.length;
 
     return (
         <SafeAreaView style={styles.container}>
@@ -265,18 +342,18 @@ export default function QuestionnaireScreen() {
                 <View style={styles.progressBarBg}>
                     <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
                 </View>
-                <Text style={styles.progressText}>{currentStep + 1}/{QUESTIONS.length}</Text>
+                <Text style={styles.progressText}>{displayStep}/{displayTotal}</Text>
             </View>
 
             <View style={styles.questionContainer}>
                 <Text style={styles.questionText}>{currentQuestion.text}</Text>
 
                 <View style={styles.optionsContainer}>
-                    {currentQuestion.options.map((option, index) => (
+                    {currentQuestion.options.map((option: string, index: number) => (
                         <TouchableOpacity
                             key={index}
                             style={styles.optionButton}
-                            onPress={() => handleAnswer(option)}
+                            onPress={() => isOnSmokerQuestion ? handleSmokerAnswer(option) : handleAnswer(option)}
                         >
                             <Text style={styles.optionText}>{option}</Text>
                             <Ionicons name="chevron-forward" size={20} color={LPColors.textGray} />

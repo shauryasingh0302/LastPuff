@@ -1,6 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// System prompt for the AI Coach
 const SYSTEM_PROMPT = `You are now my personal fitness trainer.
 Your job is to create personalized workout and nutrition guidance based on my goals, fitness level, lifestyle, and limitations. Always ask clarifying questions before giving a plan.
 
@@ -46,6 +45,27 @@ Age, weight, and height?
 
 Training days available per week?`;
 
+let modelInstance = null;
+
+const getModel = () => {
+  if (modelInstance) return modelInstance;
+
+  if (!process.env.GEMINI_API_KEY) {
+    console.error("GEMINI_API_KEY is missing from environment variables!");
+    return null;
+  }
+
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    modelInstance = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    console.log("Gemini AI Model initialized successfully.");
+    return modelInstance;
+  } catch (error) {
+    console.error("Failed to initialize Gemini Model:", error);
+    return null;
+  }
+};
+
 export const chatWithCoach = async (req, res) => {
   try {
     const { message, chatHistory } = req.body;
@@ -54,63 +74,128 @@ export const chatWithCoach = async (req, res) => {
       return res.status(400).json({ message: "Message is required" });
     }
 
-    console.log("GEMINI_API_KEY present:", !!process.env.GEMINI_API_KEY);
-    console.log("Key preview:", process.env.GEMINI_API_KEY?.substring(0, 10) + "...");
+    const model = getModel();
 
-    if (!process.env.GEMINI_API_KEY) {
-      console.error("GEMINI_API_KEY not found in environment variables");
-      return res.status(500).json({ message: "Gemini API key not configured" });
+    if (!model) {
+      const fallbackResponses = [
+        "I'm having a technical moment! 💪 While I reconnect, try doing 20 jumping jacks or 10 push-ups to get your blood flowing!",
+        "Let me reconnect... In the meantime, remember: consistency beats perfection. Keep moving and stay active!",
+        "Technical hiccup on my end! But don't skip your workout - try a quick 5-minute stretch while I sort this out. 🏋️",
+      ];
+      return res.status(200).json({
+        success: true,
+        response: fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)],
+        fallback: true,
+      });
     }
 
-    // Initialize Gemini with API key
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-
-    // Use gemini-2.0-flash (available model)
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-    // Build a simple prompt with context
     const prompt = `${SYSTEM_PROMPT}
 
 User message: ${message}
 
 Respond as the AI personal trainer:`;
 
-    console.log("Sending request to Gemini...");
-
-    // Use simple generateContent instead of chat
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const aiResponse = response.text();
-
-    console.log("Gemini response received successfully!");
 
     return res.status(200).json({
       success: true,
       response: aiResponse,
     });
   } catch (err) {
-    console.error("=== AI COACH ERROR ===");
-    console.error("Error name:", err.name);
-    console.error("Error message:", err.message);
-    console.error("Error status:", err.status);
-    console.error("Error statusText:", err.statusText);
-    if (err.response) {
-      console.error("Response data:", err.response);
+    console.error("AI COACH ERROR", err);
+    return res.status(500).json({
+      success: false,
+      message: "AI service interrupted",
+      error: err.toString()
+    });
+  }
+};
+
+export const analyzeFood = async (req, res) => {
+  const { foodText } = req.body;
+  if (!foodText) return res.status(400).json({ message: "Food text required" });
+
+  try {
+    const model = getModel();
+    if (!model) throw new Error("Model not initialized");
+
+    const prompt = `You are a nutrition expert. Analyze the food: "${foodText}".
+    Provide a SCIENTIFICALLY ACCURATE estimation of calories and macros.
+    If quantity is not specified, assume a standard serving size.
+    
+    Return ONLY a raw JSON object (no markdown) with:
+    {
+      "name": "Concise food name (e.g., 'Grilled Chicken Breast, 200g')",
+      "calories": number (kcal),
+      "protein": number (grams),
+      "carbs": number (grams),
+      "fats": number (grams)
+    }`;
+
+    const result = await model.generateContent(prompt);
+    const responseText = result.response.text();
+    
+    const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+    const nutritionData = JSON.parse(cleanJson);
+
+    return res.status(200).json(nutritionData);
+
+  } catch (error) {
+    console.error("Food Analysis Error:", error);
+    
+    return res.status(500).json({
+      success: false,
+      message: "AI Analysis Failed. Check Server Logs.",
+      error: error.message || error.toString()
+    });
+  }
+};
+
+export const suggestSmartMeal = async (req, res) => {
+  try {
+    const { history, currentHour } = req.body;
+    const model = getModel();
+    
+    if (!model) {
+        return res.json({ 
+            mealName: "Carrot Sticks & Hummus", 
+            reason: "Crunchy texture helps with oral fixation (Offline Mode).", 
+            calories: 150, 
+            protein: 4 
+        });
     }
-    console.error("Full error:", err);
-    console.error("======================");
+
+    const timeOfDay = currentHour < 11 ? "Morning" : currentHour < 15 ? "Lunch" : currentHour < 19 ? "Dinner" : "Late Night";
+
+    const prompt = `User is quitting smoking. 
+    Time: ${timeOfDay} (${currentHour}:00).
+    Eaten today: ${JSON.stringify(history)}.
     
-    // Provide a fallback response if AI fails
-    const fallbackResponses = [
-      "I'm having a technical moment! 💪 While I reconnect, try doing 20 jumping jacks or 10 push-ups to get your blood flowing!",
-      "Let me reconnect... In the meantime, remember: consistency beats perfection. Keep moving and stay active!",
-      "Technical hiccup on my end! But don't skip your workout - try a quick 5-minute stretch while I sort this out. 🏋️",
-    ];
+    Suggest ONE delicious, healthy meal option that:
+    1. Balances their nutrition based on what they already ate.
+    2. Helps physically with withdrawals (e.g. dopamine boosting foods, crunchy foods for oral fixation, or vitamin C rich).
     
-    return res.status(200).json({
-      success: true,
-      response: fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)],
-      fallback: true,
+    Return ONLY a raw JSON object:
+    {
+      "mealName": "Name of the meal",
+      "reason": "1 short sentence why this is good for quitting smoking right now",
+      "calories": estimated kcal,
+      "protein": estimated protein
+    }`;
+
+    const result = await model.generateContent(prompt);
+    const cleanJson = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+    return res.status(200).json(JSON.parse(cleanJson));
+
+  } catch (error) {
+    console.error("Meal Suggestion Error:", error);
+    return res.status(200).json({ 
+        mealName: "Green Tea & Dark Chocolate", 
+        reason: "Antioxidants help repair cell damage.", 
+        calories: 100, 
+        protein: 1 
     });
   }
 };

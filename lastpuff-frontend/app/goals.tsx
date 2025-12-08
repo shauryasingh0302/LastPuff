@@ -1,25 +1,25 @@
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
-  Modal,
-  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import { useGoals } from "../context/GoalsContext";
 import { LPColors } from "../constants/theme";
+import { useGoals } from "../context/GoalsContext";
 
 // compulsory 5 goals always shown
 const compulsoryGoalsList = [
-  { icon: "ban-outline", text: "Avoid 5 cigarettes today" },
+  { icon: "ban-outline", text: "Take 10,000 steps" },
   { icon: "water-outline", text: "Drink 3 glasses of water" },
   { icon: "flash-outline", text: "10 min breathing exercise" },
-  { icon: "wallet-outline", text: "Save ₹100 today" },
+  { icon: "wallet-outline", text: "Do 10 pushups" },
   { icon: "walk-outline", text: "Walk 10 minutes" },
 ];
 

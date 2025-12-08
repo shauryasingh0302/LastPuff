@@ -41,12 +41,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="stats"
+        name="diet"
         options={{
-          title: 'Dashboard',
+          title: 'Diet',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={focused ? 'bar-chart' : 'bar-chart-outline'}
+              name={focused ? 'restaurant' : 'restaurant-outline'}
               size={24}
               color={color}
             />

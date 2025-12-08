@@ -4,16 +4,22 @@ import { Platform } from "react-native";
 //http://localhost:5000
 
 // ---------------- BASE URL HANDLING ----------------
-let BASE_URL = "http://localhost:5000"; // Default for Web & iOS
+// For physical Android device via Expo Go, use your PC's local IP
+// Find your IP: Run 'ipconfig' in terminal and look for IPv4 Address
+const LOCAL_IP = "192.168.22.157"; // <-- Change this to your PC's IP if needed
+
+let BASE_URL = "http://localhost:5000"; // Default for Web & iOS Simulator
 // let BASE_URL = "https://lastpuff-backend.onrender.com";
 
 if (Platform.OS === "android") {
-  BASE_URL = "http://localhost:5000";
+  BASE_URL = `http://${LOCAL_IP}:5000`; // Use local IP for physical Android device
   // BASE_URL = "https://lastpuff-backend.onrender.com";
 }
 
-// For real physical phone on same WiFi, replace manually with your PC IP
-// BASE_URL = "http://192.168.x.x:5000";
+// For iOS physical device on same WiFi, also use LOCAL_IP:
+// if (Platform.OS === "ios") {
+//   BASE_URL = `http://${LOCAL_IP}:5000`;
+// }
 
 // ---------------- AXIOS INSTANCE ----------------
 const API = axios.create({
@@ -42,7 +48,9 @@ export const signup = (
   password: string,
   age?: number,
   height?: number,
-  weight?: number
+  weight?: number,
+  isSmoker?: boolean,
+  plan?: string
 ) =>
   API.post("/auth/signup", {
     name,
@@ -51,6 +59,8 @@ export const signup = (
     age,
     height,
     weight,
+    isSmoker,
+    plan,
   });
 
 // ---------- DASHBOARD ----------
@@ -68,5 +78,11 @@ interface ChatMessage {
 
 export const chatWithAICoach = (message: string, chatHistory: ChatMessage[]) =>
   API.post("/ai-coach/chat", { message, chatHistory });
+
+export const analyzeFoodApi = (foodText: string) =>
+  API.post("/ai-coach/analyze-food", { foodText });
+
+export const suggestSmartMealApi = (history: string[], currentHour: number) =>
+  API.post("/ai-coach/suggest-smart-meal", { history, currentHour });
 
 export default API;

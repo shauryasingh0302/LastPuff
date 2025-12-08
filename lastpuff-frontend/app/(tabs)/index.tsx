@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -13,10 +12,10 @@ import { LPColors } from '../../constants/theme';
 import { AuthContext } from '../../context/AuthContext';
 import { useGoals } from '../../context/GoalsContext';
 import { fetchDashboardSummary } from '../../services/api';
+import { LPHaptics } from '../../services/haptics';
 
 const { width } = Dimensions.get('window');
 
-// Interactive Scale Button Component
 const AnimatedBtn = ({ children, onPress, style, disabled }: any) => {
   const scale = useSharedValue(1);
 
@@ -26,7 +25,7 @@ const AnimatedBtn = ({ children, onPress, style, disabled }: any) => {
 
   const handlePressIn = () => {
     if (disabled) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    LPHaptics.light();
     scale.value = withSpring(0.95);
   };
 
@@ -71,21 +70,20 @@ export default function HomeScreen() {
     const goal = goals.find((g) => g.id === goalId);
     if (!goal || goal.completed) return;
 
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    LPHaptics.success();
     toggleGoalCompletion(goalId);
   };
 
-  const cigsToday = 0; // dashboard?.today?.cigarettesAvoided ?? 0;
-  const moneyToday = 0; // dashboard?.today?.moneySaved ?? 0;
-  const goalsToday = 0; // dashboard?.today?.goalsCompleted ?? 0;
-  const streak = 0; // dashboard?.streak ?? 0;
-  const puffCoins = 0; // dashboard?.puffCoins ?? 0;
+  const cigsToday = 0;
+  const moneyToday = 0;
+  const goalsToday = 0;
+  const streak = 0;
+  const puffCoins = 0;
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
 
-      {/* Header */}
       <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.header}>
         <View>
           <Text style={styles.greeting}>Welcome back,</Text>
@@ -101,7 +99,6 @@ export default function HomeScreen() {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
 
-        {/* Top Stats Hero Card */}
         <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.topStatsContainer}>
           <LinearGradient
             colors={[LPColors.primary, '#004d2c']}
@@ -131,9 +128,7 @@ export default function HomeScreen() {
           </LinearGradient>
         </Animated.View>
 
-        {/* Streak & Health Grid */}
         <Animated.View entering={FadeInDown.delay(300).duration(500)} style={styles.gridContainer}>
-          {/* Streak Card */}
           <View style={[styles.gridCard, { flex: 1.2 }]}>
             <View style={styles.streakContent}>
               <View style={styles.streakCircleContainer}>
@@ -150,8 +145,6 @@ export default function HomeScreen() {
             </View>
           </View>
 
-
-          {/* Health Card */}
           <View style={[styles.gridCard, { flex: 1 }]}>
             <View style={styles.healthStats}>
               <View style={styles.healthItem}>
@@ -167,7 +160,6 @@ export default function HomeScreen() {
           </View>
         </Animated.View>
 
-        {/* SOS Button */}
         <Animated.View entering={FadeInDown.delay(400).duration(500)} style={{ marginBottom: 24 }}>
           <AnimatedBtn onPress={() => router.push('/sos')}>
             <LinearGradient
@@ -182,7 +174,6 @@ export default function HomeScreen() {
           </AnimatedBtn>
         </Animated.View>
 
-        {/* Daily Goals */}
         <Animated.View entering={FadeInDown.delay(500).duration(500)} style={styles.sectionContainer}>
           <Link href="/goals" asChild>
             <TouchableOpacity style={styles.sectionHeader}>
@@ -208,7 +199,6 @@ export default function HomeScreen() {
           </View>
         </Animated.View>
 
-        {/* Quick Games */}
         <Animated.View entering={FadeInDown.delay(600).duration(500)} style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>Quick Games</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.gamesRow}>
@@ -242,7 +232,6 @@ export default function HomeScreen() {
           </ScrollView>
         </Animated.View>
 
-        {/* National Impact */}
         <Animated.View entering={FadeInDown.delay(700).duration(500)} style={[styles.sectionContainer, { marginBottom: 100 }]}>
           <Text style={styles.sectionTitle}>Community Impact</Text>
           <Shine style={styles.impactCard}>
@@ -309,7 +298,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 8,
   },
-  moneyLabel: { color: 'rgba(0,0,0,0.5)', fontSize: 10, display: 'none' }, // hidden for aesthetic
+  moneyLabel: { color: 'rgba(0,0,0,0.5)', fontSize: 10, display: 'none' },
   moneyValue: { color: '#FFF', fontSize: 18, fontWeight: 'bold', marginTop: 4 },
 
   gridContainer: { flexDirection: 'row', gap: 12, marginBottom: 24 },

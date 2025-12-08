@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Linking, ScrollView } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import React, { useState } from "react";
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { LPColors } from "../constants/theme";
+import { LPHaptics } from "../services/haptics";
 
 const QUOTES = [
   "The craving will pass whether you smoke or not.",
@@ -16,13 +17,14 @@ export default function SOSScreen() {
   const [quote] = useState(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
 
   const handleCallSupport = () => {
-    Linking.openURL("tel:18007848669"); // Example: National Quitline
+    LPHaptics.heavy();
+    Linking.openURL("tel:18007848669");
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => { LPHaptics.light(); router.back(); }} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={28} color={LPColors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>SOS Mode</Text>
@@ -39,10 +41,9 @@ export default function SOSScreen() {
         </View>
 
         <View style={styles.actionsGrid}>
-          {/* Breathing */}
           <TouchableOpacity
             style={styles.actionCard}
-            onPress={() => router.push('/games/breathing')}
+            onPress={() => { LPHaptics.medium(); router.push('/games/breathing'); }}
           >
             <View style={[styles.iconBox, { backgroundColor: 'rgba(57, 255, 20, 0.1)' }]}>
               <Ionicons name="fitness" size={32} color={LPColors.primary} />
@@ -52,10 +53,9 @@ export default function SOSScreen() {
             <Ionicons name="arrow-forward" size={20} color={LPColors.textGray} style={styles.arrow} />
           </TouchableOpacity>
 
-          {/* Distraction */}
           <TouchableOpacity
             style={styles.actionCard}
-            onPress={() => router.push('/games/2048')}
+            onPress={() => { LPHaptics.medium(); router.push('/games/2048'); }}
           >
             <View style={[styles.iconBox, { backgroundColor: 'rgba(59, 130, 246, 0.1)' }]}>
               <Ionicons name="game-controller" size={32} color="#3B82F6" />
@@ -65,7 +65,6 @@ export default function SOSScreen() {
             <Ionicons name="arrow-forward" size={20} color={LPColors.textGray} style={styles.arrow} />
           </TouchableOpacity>
 
-          {/* Call Support */}
           <TouchableOpacity
             style={[styles.actionCard, { borderColor: '#FF3B30', borderWidth: 1 }]}
             onPress={handleCallSupport}
@@ -79,9 +78,8 @@ export default function SOSScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Motivation Card */}
         <View style={styles.quoteCard}>
-          <Ionicons name="quote" size={24} color={LPColors.primary} style={{ marginBottom: 8 }} />
+          <Ionicons name="chatbubble-ellipses" size={24} color={LPColors.primary} style={{ marginBottom: 8 }} />
           <Text style={styles.quoteText}>"{quote}"</Text>
         </View>
       </ScrollView>

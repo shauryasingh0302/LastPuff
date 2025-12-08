@@ -275,3 +275,252 @@ export async function isGeofencingActive(): Promise<boolean> {
         return false;
     }
 }
+
+// ============== IDLE DETECTION FEATURE ==============
+
+// Task name for idle detection
+const IDLE_DETECTION_TASK = 'IDLE_DETECTION_TASK';
+
+// Storage keys for idle detection
+const IDLE_DETECTION_ENABLED_KEY = '@idle_detection_enabled';
+const LAST_LOCATION_KEY = '@last_location';
+const LAST_LOCATION_TIME_KEY = '@last_location_time';
+
+// Idle threshold in milliseconds (30 seconds for testing)
+const IDLE_THRESHOLD_MS = 30 * 1000;
+
+// Daytime hours (6 AM to 10 PM)
+const DAYTIME_START_HOUR = 6;
+const DAYTIME_END_HOUR = 22;
+
+// Distance threshold in meters to consider as "same location"
+const SAME_LOCATION_THRESHOLD_METERS = 50;
+
+/**
+ * Check if current time is within daytime hours
+ */
+function isDaytime(): boolean {
+    const now = new Date();
+    const hours = now.getHours();
+    return hours >= DAYTIME_START_HOUR && hours < DAYTIME_END_HOUR;
+}
+
+/**
+ * Calculate distance between two coordinates in meters
+ */
+function calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+): number {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a =
+        Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+        Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
+}
+
+// Define the idle detection background task
+TaskManager.defineTask(IDLE_DETECTION_TASK, async ({ data, error }) => {
+    if (error) {
+        console.error('Idle detection task error:', error);
+        return;
+    }
+
+    // Only run during daytime
+    if (!isDaytime()) {
+        console.log('Idle detection skipped - not daytime');
+        return;
+    }
+
+    if (data) {
+        const { locations } = data as { locations: Location.LocationObject[] };
+        if (!locations || locations.length === 0) return;
+
+        const currentLocation = locations[0];
+        const currentTime = Date.now();
+
+        try {
+            // Get previous location data
+            const lastLocationStr = await AsyncStorage.getItem(LAST_LOCATION_KEY);
+            const lastTimeStr = await AsyncStorage.getItem(LAST_LOCATION_TIME_KEY);
+
+            if (lastLocationStr && lastTimeStr) {
+                const lastLocation = JSON.parse(lastLocationStr);
+                const lastTime = parseInt(lastTimeStr, 10);
+
+                // Calculate distance from last location
+                const distance = calculateDistance(
+                    lastLocation.latitude,
+                    lastLocation.longitude,
+                    currentLocation.coords.latitude,
+                    currentLocation.coords.longitude
+                );
+
+                // Check if user is still at same location
+                if (distance < SAME_LOCATION_THRESHOLD_METERS) {
+                    const idleTime = currentTime - lastTime;
+
+                    // If idle for more than threshold, send notification
+                    if (idleTime >= IDLE_THRESHOLD_MS) {
+                        await sendIdleNotification(idleTime);
+                        // Reset the timer after notification
+                        await AsyncStorage.setItem(LAST_LOCATION_TIME_KEY, currentTime.toString());
+                    }
+                } else {
+                    // User moved - update location and reset timer
+                    await AsyncStorage.setItem(
+                        LAST_LOCATION_KEY,
+                        JSON.stringify({
+                            latitude: currentLocation.coords.latitude,
+                            longitude: currentLocation.coords.longitude,
+                        })
+                    );
+                    await AsyncStorage.setItem(LAST_LOCATION_TIME_KEY, currentTime.toString());
+                }
+            } else {
+                // First location - save it
+                await AsyncStorage.setItem(
+                    LAST_LOCATION_KEY,
+                    JSON.stringify({
+                        latitude: currentLocation.coords.latitude,
+                        longitude: currentLocation.coords.longitude,
+                    })
+                );
+                await AsyncStorage.setItem(LAST_LOCATION_TIME_KEY, currentTime.toString());
+            }
+        } catch (err) {
+            console.error('Error in idle detection:', err);
+        }
+    }
+});
+
+/**
+ * Send idle notification
+ */
+async function sendIdleNotification(idleTimeMs: number): Promise<void> {
+    try {
+        const minutes = Math.floor(idleTimeMs / 60000);
+
+        await Notifications.scheduleNotificationAsync({
+            content: {
+                title: '⏰ Time to Move!',
+                body: `You've been stationary for ${minutes}+ minutes. Get up and stretch, take a short walk, or do some quick exercises! 🏃‍♂️`,
+                sound: true,
+                priority: Notifications.AndroidNotificationPriority.HIGH,
+            },
+            trigger: null, // Send immediately
+        });
+
+        console.log('Idle notification sent');
+    } catch (error) {
+        console.error('Error sending idle notification:', error);
+    }
+}
+
+/**
+ * Start idle detection monitoring
+ */
+export async function startIdleDetection(): Promise<void> {
+    try {
+        // Check if already running
+        const isRegistered = await TaskManager.isTaskRegisteredAsync(IDLE_DETECTION_TASK);
+        if (isRegistered) {
+            console.log('Idle detection already running');
+            return;
+        }
+
+        // Request permissions
+        const hasPermissions = await requestPermissions();
+        if (!hasPermissions) {
+            console.log('Missing permissions for idle detection');
+            return;
+        }
+
+        // Get initial location
+        const currentLocation = await getCurrentLocation();
+        if (currentLocation) {
+            await AsyncStorage.setItem(
+                LAST_LOCATION_KEY,
+                JSON.stringify({
+                    latitude: currentLocation.coords.latitude,
+                    longitude: currentLocation.coords.longitude,
+                })
+            );
+            await AsyncStorage.setItem(LAST_LOCATION_TIME_KEY, Date.now().toString());
+        }
+
+        // Start background location tracking
+        await Location.startLocationUpdatesAsync(IDLE_DETECTION_TASK, {
+            accuracy: Location.Accuracy.Balanced,
+            timeInterval: 30000, // Check every 30 seconds
+            distanceInterval: 10, // Or when moved 10 meters
+            foregroundService: {
+                notificationTitle: 'Activity Monitor',
+                notificationBody: 'Monitoring your activity to keep you moving',
+                notificationColor: '#39FF14',
+            },
+            pausesUpdatesAutomatically: false,
+            activityType: Location.ActivityType.Other,
+        });
+
+        await AsyncStorage.setItem(IDLE_DETECTION_ENABLED_KEY, 'true');
+        console.log('Idle detection started');
+    } catch (error) {
+        console.error('Error starting idle detection:', error);
+        throw error;
+    }
+}
+
+/**
+ * Stop idle detection monitoring
+ */
+export async function stopIdleDetection(): Promise<void> {
+    try {
+        const isRegistered = await TaskManager.isTaskRegisteredAsync(IDLE_DETECTION_TASK);
+        if (isRegistered) {
+            await Location.stopLocationUpdatesAsync(IDLE_DETECTION_TASK);
+        }
+
+        await AsyncStorage.setItem(IDLE_DETECTION_ENABLED_KEY, 'false');
+        await AsyncStorage.removeItem(LAST_LOCATION_KEY);
+        await AsyncStorage.removeItem(LAST_LOCATION_TIME_KEY);
+
+        console.log('Idle detection stopped');
+    } catch (error) {
+        console.error('Error stopping idle detection:', error);
+    }
+}
+
+/**
+ * Check if idle detection is enabled
+ */
+export async function isIdleDetectionEnabled(): Promise<boolean> {
+    try {
+        const enabled = await AsyncStorage.getItem(IDLE_DETECTION_ENABLED_KEY);
+        return enabled === 'true';
+    } catch (error) {
+        console.error('Error checking idle detection status:', error);
+        return false;
+    }
+}
+
+/**
+ * Check if idle detection is currently active (task running)
+ */
+export async function isIdleDetectionActive(): Promise<boolean> {
+    try {
+        return await TaskManager.isTaskRegisteredAsync(IDLE_DETECTION_TASK);
+    } catch (error) {
+        console.error('Error checking idle detection active status:', error);
+        return false;
+    }
+}

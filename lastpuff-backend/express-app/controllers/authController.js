@@ -16,7 +16,7 @@ const sanitizeUser = (user) => {
 
 export const signup = async (req, res) => {
   try {
-    const { name, email, password, age, height, weight, plan } = req.body;
+    const { name, email, password, age, height, weight, plan, isSmoker } = req.body;
 
     // Basic validation
     if (!name || !email || !password) {
@@ -41,7 +41,8 @@ export const signup = async (req, res) => {
       age: age ? Number(age) : undefined,
       heightCm: height ? Number(height) : undefined,
       weightKg: weight ? Number(weight) : undefined,
-      plan: plan === "aggressive" ? "aggressive" : "gradual",
+      plan: plan === "aggressive" ? "aggressive" : plan === "gradual" ? "gradual" : "none",
+      isSmoker: isSmoker === true || isSmoker === "true",
     });
 
     const token = createToken(user._id);
