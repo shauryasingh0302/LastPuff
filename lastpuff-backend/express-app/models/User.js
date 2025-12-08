@@ -17,15 +17,17 @@ const userSchema = new mongoose.Schema(
     heightCm: { type: Number },
     weightKg: { type: Number },
 
-    plan: { type: String, enum: ["gradual", "aggressive", "A"], default: "A" },
+    isSmoker: { type: Boolean, default: false },
 
-    streak: { type: Number, default: 0 },                
-    lastStreakUpdateDate: { type: String, default: null }, 
+    plan: { type: String, enum: ["gradual", "aggressive", "none"], default: "none" },
 
-    puffCoins: { type: Number, default: 0 },             
-    totalRelapses: { type: Number, default: 0 },         
+    streak: { type: Number, default: 0 },
+    lastStreakUpdateDate: { type: String, default: null },
 
-    dailyStats: [dailyStatsSchema],                      
+    puffCoins: { type: Number, default: 0 },
+    totalRelapses: { type: Number, default: 0 },
+
+    dailyStats: [dailyStatsSchema],
   },
   { timestamps: true }
 );

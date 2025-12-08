@@ -1,11 +1,13 @@
-import React, { useContext, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
-import { Link, useRouter } from "expo-router";
-import API from "../../services/api";
-import { AuthContext } from "../../context/AuthContext";
-import { LPColors } from "../../constants/theme";
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Link, useRouter } from "expo-router";
+import React, { useContext, useState } from "react";
+import { Image, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { LPColors } from "../../constants/theme";
+import { AuthContext } from "../../context/AuthContext";
+import API from "../../services/api";
+
+const logoImage = require("../../assets/images/logo.png");
 
 interface AuthResponse {
   token: string;
@@ -47,9 +49,7 @@ export default function LoginScreen() {
     >
       <View style={styles.formContainer}>
         <View style={styles.headerContainer}>
-          <View style={styles.iconCircle}>
-            <Ionicons name="leaf" size={40} color={LPColors.primary} />
-          </View>
+          <Image source={logoImage} style={styles.logo} resizeMode="contain" />
           <Text style={styles.title}>Welcome Back</Text>
           <Text style={styles.subtitle}>Sign in to continue your quit journey</Text>
         </View>
@@ -104,16 +104,10 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0A0A0A', justifyContent: "center", padding: 24 },
   formContainer: { width: '100%', maxWidth: 400, alignSelf: 'center' },
   headerContainer: { alignItems: 'center', marginBottom: 40 },
-  iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(57, 255, 20, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
+  logo: {
+    width: 100,
+    height: 100,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: LPColors.primary,
   },
   title: { color: LPColors.text, fontSize: 32, fontWeight: "bold", textAlign: "center", marginBottom: 8 },
   subtitle: { color: LPColors.textGray, fontSize: 16, textAlign: "center" },

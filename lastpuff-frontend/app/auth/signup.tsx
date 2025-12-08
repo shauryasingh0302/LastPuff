@@ -1,16 +1,36 @@
-import React, { useState, useContext } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
-import API from "../../services/api";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { StatusBar } from "expo-status-bar";
+import React, { useContext, useState } from "react";
+import {
+  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { RFValue } from "react-native-responsive-fontsize";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import { useRouter } from "expo-router";
 import { AuthContext } from "../../context/AuthContext";
-import { LPColors } from "../../constants/theme";
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 
-interface AuthResponse {
-  token: string;
+/* ---------- Response Type ---------- */
+interface SignupResponse {
   user: any;
+  token: string;
 }
+
+/* ---------- Responsive Helpers ---------- */
+const { width, height } = Dimensions.get("window");
+const wp = (p: number) => (width * p) / 100;
+const hp = (p: number) => (height * p) / 100;
+
+const PLACEHOLDER = "rgba(255,255,255,0.55)";
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -23,176 +43,270 @@ export default function SignupScreen() {
     age: "",
     height: "",
     weight: "",
-    plan: "gradual",
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const handleChange = (key: string, value: string) => {
-    setForm({ ...form, [key]: value });
-  };
 
   const onSignup = async () => {
     try {
       setLoading(true);
       setError("");
 
+      console.log('[Signup] Starting signup process');
+
+      // Validate required fields
+      if (!form.name || !form.email || !form.password) {
+        setError("Please fill in all required fields (Name, Email, Password)");
+        return;
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(form.email)) {
+        setError("Please enter a valid email address");
+        return;
+      }
+
+      // Validate password length
+      if (form.password.length < 6) {
+        setError("Password must be at least 6 characters");
+        return;
+      }
+
       const payload = {
-        ...form,
-        age: form.age ? Number(form.age) : undefined,
-        height: form.height ? Number(form.height) : undefined,
-        weight: form.weight ? Number(form.weight) : undefined,
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        age: Number(form.age) || 0,
+        height: Number(form.height) || 0,
+        weight: Number(form.weight) || 0,
       };
 
-      const res = await API.post<AuthResponse>("/auth/signup", payload);
-      await auth.loginUser(res.data.user, res.data.token);
+      console.log('[Signup] Payload prepared for:', payload.email);
 
-      // 🚀 Redirect to onboarding for new users to set up their plan
-      router.replace("/onboarding/questionnaire");
+      // Navigate to questionnaire with signup data
+      // Account will ONLY be created when user selects a plan
+      const signupDataStr = JSON.stringify(payload);
+      console.log('[Signup] Navigating to questionnaire with data length:', signupDataStr.length);
+
+      router.push({
+        pathname: "/onboarding/questionnaire",
+        params: { signupData: signupDataStr }
+      });
+
     } catch (err: any) {
-      console.log("FULL SIGNUP ERROR:", JSON.stringify(err, null, 2));
-      setError(err.response?.data?.message || err.message || "Signup failed");
+      console.error('[Signup] Error:', err);
+      setError(err.response?.data?.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
-
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.headerContainer}>
-          <View style={styles.iconCircle}>
-            <Ionicons name="person-add-outline" size={40} color={LPColors.primary} />
+    <SafeAreaView style={styles.safe}>
+      <StatusBar style="light" />
+
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scroll}
+        >
+          {/* HEADER */}
+          <View style={styles.header}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="person-add" size={RFValue(38)} color="#000" />
+            </View>
+
+            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.subtitle}>
+              Join LastPuff and start your journey
+            </Text>
           </View>
-          <Text style={styles.title}>Join LastPuff</Text>
-          <Text style={styles.subtitle}>Start your smoke-free journey today</Text>
-        </View>
 
-        <View style={styles.inputContainer}>
-          <Ionicons name="person-outline" size={20} color={LPColors.textGray} style={styles.inputIcon} />
-          <TextInput
-            placeholder="Name"
-            placeholderTextColor={LPColors.textGray}
-            style={styles.input}
-            onChangeText={(v) => handleChange("name", v)}
-          />
-        </View>
+          {/* INPUTS */}
+          <View style={styles.inputBox}>
+            <Ionicons name="person-outline" size={RFValue(18)} color={PLACEHOLDER} />
+            <TextInput
+              placeholder="Full Name"
+              placeholderTextColor={PLACEHOLDER}
+              style={styles.input}
+              onChangeText={(t) => setForm({ ...form, name: t })}
+            />
+          </View>
 
-        <View style={styles.inputContainer}>
-          <Ionicons name="mail-outline" size={20} color={LPColors.textGray} style={styles.inputIcon} />
-          <TextInput
-            placeholder="Email"
-            placeholderTextColor={LPColors.textGray}
-            style={styles.input}
-            onChangeText={(v) => handleChange("email", v)}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-        </View>
+          <View style={styles.inputBox}>
+            <Ionicons name="mail-outline" size={RFValue(18)} color={PLACEHOLDER} />
+            <TextInput
+              placeholder="Email Address"
+              placeholderTextColor={PLACEHOLDER}
+              style={styles.input}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              onChangeText={(t) => setForm({ ...form, email: t })}
+            />
+          </View>
 
-        <View style={styles.inputContainer}>
-          <Ionicons name="lock-closed-outline" size={20} color={LPColors.textGray} style={styles.inputIcon} />
-          <TextInput
-            placeholder="Password"
-            placeholderTextColor={LPColors.textGray}
-            secureTextEntry
-            style={styles.input}
-            onChangeText={(v) => handleChange("password", v)}
-          />
-        </View>
+          <View style={styles.inputBox}>
+            <Ionicons name="lock-closed-outline" size={RFValue(18)} color={PLACEHOLDER} />
+            <TextInput
+              placeholder="Password"
+              placeholderTextColor={PLACEHOLDER}
+              secureTextEntry
+              style={styles.input}
+              onChangeText={(t) => setForm({ ...form, password: t })}
+            />
+          </View>
 
-        <View style={styles.row}>
-          <View style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}>
+          {/* Age */}
+          <View style={styles.inputBox}>
+            <Ionicons name="calendar-outline" size={RFValue(18)} color={PLACEHOLDER} />
             <TextInput
               placeholder="Age"
-              placeholderTextColor={LPColors.textGray}
-              keyboardType="numeric"
-              style={styles.inputCentered}
-              onChangeText={(v) => handleChange("age", v)}
+              placeholderTextColor={PLACEHOLDER}
+              style={styles.input}
+              keyboardType="number-pad"
+              onChangeText={(t) => setForm({ ...form, age: t })}
             />
           </View>
-          <View style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}>
+
+          {/* Height */}
+          <View style={styles.inputBox}>
+            <Ionicons name="resize-outline" size={RFValue(18)} color={PLACEHOLDER} />
             <TextInput
-              placeholder="H (cm)"
-              placeholderTextColor={LPColors.textGray}
-              keyboardType="numeric"
-              style={styles.inputCentered}
-              onChangeText={(v) => handleChange("height", v)}
+              placeholder="Height (cm)"
+              placeholderTextColor={PLACEHOLDER}
+              style={styles.input}
+              keyboardType="number-pad"
+              onChangeText={(t) => setForm({ ...form, height: t })}
             />
           </View>
-          <View style={[styles.inputContainer, { flex: 1 }]}>
+
+          {/* Weight */}
+          <View style={styles.inputBox}>
+            <Ionicons name="barbell-outline" size={RFValue(18)} color={PLACEHOLDER} />
             <TextInput
-              placeholder="W (kg)"
-              placeholderTextColor={LPColors.textGray}
-              keyboardType="numeric"
-              style={styles.inputCentered}
-              onChangeText={(v) => handleChange("weight", v)}
+              placeholder="Weight (kg)"
+              placeholderTextColor={PLACEHOLDER}
+              style={styles.input}
+              keyboardType="number-pad"
+              onChangeText={(t) => setForm({ ...form, weight: t })}
             />
           </View>
-        </View>
 
+          {/* ERROR */}
+          {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+          {/* SIGN UP BUTTON */}
+          <TouchableOpacity onPress={onSignup} activeOpacity={0.8}>
+            <LinearGradient
+              colors={["#39FF14", "#00A84F"]}
+              style={styles.button}
+            >
+              <Text style={styles.buttonText}>
+                {loading ? "Creating Account..." : "Sign Up"}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
 
-        <TouchableOpacity onPress={onSignup} disabled={loading}>
-          <LinearGradient
-            colors={[LPColors.primary, '#004d2c']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.button}
-          >
-            <Text style={styles.buttonText}>{loading ? "Creating Account..." : "Sign Up"}</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => router.push("/auth/login")}>
-          <Text style={styles.switchText}>Already have an account? <Text style={{ fontWeight: 'bold', color: LPColors.primary }}>Login</Text></Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          {/* SWITCH TO LOGIN */}
+          <TouchableOpacity onPress={() => router.push("/auth/login")}>
+            <Text style={styles.switchText}>
+              Already have an account?{" "}
+              <Text style={{ color: "#39FF14", fontWeight: "bold" }}>Login</Text>
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
+/* ---------- STYLES ---------- */
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0A' },
-  scrollContent: { padding: 24, justifyContent: 'center', minHeight: '100%' },
-  headerContainer: { alignItems: 'center', marginBottom: 32 },
+  safe: { flex: 1, backgroundColor: "#000" },
+
+  scroll: {
+    paddingHorizontal: wp(7),
+    paddingTop: hp(4),
+    paddingBottom: hp(8),
+  },
+
+  header: {
+    alignItems: "center",
+    marginBottom: hp(4),
+  },
+
   iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(57, 255, 20, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: LPColors.primary,
+    width: wp(24),
+    height: wp(24),
+    borderRadius: wp(12),
+    backgroundColor: "#39FF14",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: hp(2),
   },
-  title: { color: LPColors.text, fontSize: 32, fontWeight: "bold", textAlign: "center", marginBottom: 8 },
-  subtitle: { color: LPColors.textGray, fontSize: 16, textAlign: "center" },
 
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: LPColors.surfaceLight,
-    borderRadius: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+  title: {
+    color: "#fff",
+    fontSize: RFValue(28),
+    fontWeight: "bold",
+    marginBottom: hp(0.8),
   },
-  inputIcon: { marginLeft: 16, marginRight: 8 },
-  input: { flex: 1, padding: 16, color: LPColors.text, fontSize: 16 },
-  inputCentered: { flex: 1, padding: 16, color: LPColors.text, fontSize: 16, textAlign: 'center' },
-  row: { flexDirection: 'row', justifyContent: 'space-between' },
 
-  button: { padding: 18, borderRadius: 12, alignItems: 'center', marginTop: 16 },
-  buttonText: { color: "#000", fontWeight: "bold", fontSize: 16 },
+  subtitle: {
+    color: "#AAAAAA",
+    fontSize: RFValue(14),
+    textAlign: "center",
+  },
 
-  switchText: { color: LPColors.textGray, marginTop: 24, textAlign: "center", fontSize: 14 },
-  error: { color: "#FF3B30", textAlign: "center", marginBottom: 16 },
+  inputBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+    paddingHorizontal: wp(4),
+    borderRadius: wp(3),
+    height: hp(6.8),
+    marginBottom: hp(2),
+  },
+
+  input: {
+    flex: 1,
+    marginLeft: wp(2),
+    color: "#fff",
+    fontSize: RFValue(15),
+  },
+
+  button: {
+    paddingVertical: hp(2),
+    borderRadius: wp(3),
+    alignItems: "center",
+    marginTop: hp(1),
+  },
+
+  buttonText: {
+    color: "#000",
+    fontSize: RFValue(17),
+    fontWeight: "700",
+  },
+
+  error: {
+    color: "#FF3B30",
+    textAlign: "center",
+    fontSize: RFValue(13),
+    marginBottom: hp(1),
+  },
+
+  switchText: {
+    color: "#888",
+    marginTop: hp(3),
+    textAlign: "center",
+    fontSize: RFValue(13),
+  },
 });

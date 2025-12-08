@@ -1,4 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from "expo-router";
 import React, { useContext, useEffect, useState } from "react";
 import {
   Image,
@@ -8,13 +10,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LPColors } from "../../constants/theme";
 import { AuthContext } from "../../context/AuthContext";
 import { fetchDashboardSummary } from "../../services/api";
-import { LPColors } from "../../constants/theme";
-import { useRouter } from "expo-router";
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 
 export default function ProfileScreen() {
   const { logout, user }: any = useContext(AuthContext);
@@ -32,12 +32,12 @@ export default function ProfileScreen() {
     const loadStats = async () => {
       try {
         const res = await fetchDashboardSummary();
-        setStats(res.data as {
-          streakDays: number;
-          cravingsHandled: number;
-          moneySaved: number;
-          goalsCompleted: number;
-        });
+        // setStats(res.data as {
+        //   streakDays: number;
+        //   cravingsHandled: number;
+        //   moneySaved: number;
+        //   goalsCompleted: number;
+        // });
       } catch (err) {
         console.log("Dashboard error:", err);
       }
@@ -48,7 +48,6 @@ export default function ProfileScreen() {
 
   const settings = [
     { icon: "person-outline", name: "Edit Profile" },
-    { icon: "clipboard-outline", name: "Quit Plan Settings", route: "/onboarding/questionnaire" },
     { icon: "notifications-outline", name: "Notification Settings" },
     { icon: "flag-outline", name: "Manage Goals" },
     { icon: "lock-closed-outline", name: "Privacy & Security" },

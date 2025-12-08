@@ -1,10 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LPColors } from '../../constants/theme';
-import Animated, { FadeInDown } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
 
 export default function StatsScreen() {
   return (
@@ -20,23 +20,31 @@ export default function StatsScreen() {
           <Text style={styles.performanceTitle}>Performance Summary</Text>
 
           <View style={styles.highlightCard}>
-            <Text style={styles.highlightIcon}>🚭</Text>
-            <Text style={styles.highlightText}>You avoided 4 cigarettes</Text>
+            <View style={styles.highlightIconContainer}>
+              <Ionicons name="ban-outline" size={20} color={LPColors.primary} />
+            </View>
+            <Text style={styles.highlightText}>You avoided 0 cigarettes</Text>
           </View>
 
           <View style={styles.highlightCard}>
-            <Text style={styles.highlightIcon}>💰</Text>
-            <Text style={styles.highlightText}>You saved ₹120 today</Text>
+            <View style={styles.highlightIconContainer}>
+              <Ionicons name="wallet-outline" size={20} color="#FFD700" />
+            </View>
+            <Text style={styles.highlightText}>You saved ₹0 today</Text>
           </View>
 
           <View style={styles.highlightCard}>
-            <Text style={styles.highlightIcon}>💖</Text>
-            <Text style={styles.highlightText}>Your cancer risk dropped by 0.6%</Text>
+            <View style={styles.highlightIconContainer}>
+              <Ionicons name="heart-outline" size={20} color="#FF6B6B" />
+            </View>
+            <Text style={styles.highlightText}>Your cancer risk dropped by 0%</Text>
           </View>
 
           <View style={styles.highlightCard}>
-            <Text style={styles.highlightIcon}>🔥</Text>
-            <Text style={styles.highlightText}>You handled 3 cravings successfully</Text>
+            <View style={styles.highlightIconContainer}>
+              <Ionicons name="flame-outline" size={20} color="#FF9500" />
+            </View>
+            <Text style={styles.highlightText}>You handled 0 cravings successfully</Text>
           </View>
 
           <LinearGradient
@@ -45,8 +53,10 @@ export default function StatsScreen() {
             end={{ x: 1, y: 0 }}
             style={styles.highlightGradientCard}
           >
-            <Text style={styles.highlightIcon}>🏆</Text>
-            <Text style={[styles.highlightText, { color: '#000', fontWeight: 'bold' }]}>Streak: 14 days (2 days to next badge)</Text>
+            <View style={styles.highlightIconContainer}>
+              <Ionicons name="trophy" size={20} color="#000" />
+            </View>
+            <Text style={[styles.highlightText, { color: '#000', fontWeight: 'bold' }]}>Streak: 0 days (Start your journey!)</Text>
           </LinearGradient>
         </Animated.View>
 
@@ -57,7 +67,7 @@ export default function StatsScreen() {
             <Ionicons name="bar-chart-outline" size={20} color={LPColors.primary} />
           </View>
           <View style={styles.chartContainer}>
-            {[{ label: 'Mon', height: 55 }, { label: 'Tue', height: 70 }, { label: 'Wed', height: 45 }, { label: 'Thu', height: 85 }, { label: 'Fri', height: 90 }, { label: 'Sat', height: 60 }, { label: 'Sun', height: 75 }].map((item, index) => (
+            {[{ label: 'Mon', height: 0 }, { label: 'Tue', height: 0 }, { label: 'Wed', height: 0 }, { label: 'Thu', height: 0 }, { label: 'Fri', height: 0 }, { label: 'Sat', height: 0 }, { label: 'Sun', height: 0 }].map((item, index) => (
               <View key={index} style={styles.chartItem}>
                 <View style={[styles.chartBarContainer, { height: 100 }]}>
                   <LinearGradient
@@ -80,15 +90,15 @@ export default function StatsScreen() {
           <View style={styles.insightsGrid}>
             <LinearGradient colors={[LPColors.surfaceLight, LPColors.surface]} style={styles.insightCard}>
               <Text style={styles.insightLabel}>Cigarettes Avoided</Text>
-              <Text style={styles.insightValue}>56</Text>
+              <Text style={styles.insightValue}>0</Text>
             </LinearGradient>
             <LinearGradient colors={[LPColors.surfaceLight, LPColors.surface]} style={styles.insightCard}>
               <Text style={styles.insightLabel}>Cravings Handled</Text>
-              <Text style={styles.insightValue}>22</Text>
+              <Text style={styles.insightValue}>0</Text>
             </LinearGradient>
             <LinearGradient colors={[LPColors.surfaceLight, LPColors.surface]} style={styles.insightCard}>
               <Text style={styles.insightLabel}>Success %</Text>
-              <Text style={styles.insightValue}>78%</Text>
+              <Text style={styles.insightValue}>0%</Text>
             </LinearGradient>
           </View>
         </Animated.View>
@@ -105,7 +115,7 @@ export default function StatsScreen() {
               </View>
               <View style={styles.financeText}>
                 <Text style={styles.financeLabel}>Finance</Text>
-                <Text style={styles.financeValue}>₹6,846 Saved This Month</Text>
+                <Text style={styles.financeValue}>₹0 Saved This Month</Text>
               </View>
             </View>
           </LinearGradient>
@@ -118,17 +128,17 @@ export default function StatsScreen() {
             <View style={styles.healthCard}>
               <Ionicons name="fitness-outline" size={24} color={LPColors.primary} />
               <Text style={styles.healthLabel}>Lung Capacity</Text>
-              <Text style={styles.healthValue}>+12%</Text>
+              <Text style={styles.healthValue}>0%</Text>
             </View>
             <View style={styles.healthCard}>
               <Ionicons name="heart-outline" size={24} color={LPColors.primary} />
               <Text style={styles.healthLabel}>Cancer Risk</Text>
-              <Text style={styles.healthValue}>-4%</Text>
+              <Text style={styles.healthValue}>0%</Text>
             </View>
             <View style={styles.healthCard}>
               <Ionicons name="pulse-outline" size={24} color={LPColors.primary} />
               <Text style={styles.healthLabel}>Heart Rate</Text>
-              <Text style={styles.healthValue}>Normal</Text>
+              <Text style={styles.healthValue}>-</Text>
             </View>
           </ScrollView>
         </Animated.View>
@@ -140,17 +150,17 @@ export default function StatsScreen() {
             <View style={styles.rewardCard}>
               <Ionicons name="medal-outline" size={32} color="#FFD700" />
               <Text style={[styles.rewardLabel, { color: '#FFD700' }]}>Badge</Text>
-              <Text style={styles.rewardSubLabel}>7-day streak</Text>
+              <Text style={styles.rewardSubLabel}>0-day streak</Text>
             </View>
             <View style={styles.rewardCard}>
               <Ionicons name="trophy-outline" size={32} color="#C0C0C0" />
               <Text style={[styles.rewardLabel, { color: '#C0C0C0' }]}>Team</Text>
-              <Text style={styles.rewardSubLabel}>Top 5%</Text>
+              <Text style={styles.rewardSubLabel}>Top 0%</Text>
             </View>
             <View style={styles.rewardCard}>
               <Ionicons name="ribbon-outline" size={32} color="#CD7F32" />
               <Text style={[styles.rewardLabel, { color: '#CD7F32' }]}>Solo</Text>
-              <Text style={styles.rewardSubLabel}>10 wins</Text>
+              <Text style={styles.rewardSubLabel}>0 wins</Text>
             </View>
           </View>
         </Animated.View>
@@ -265,8 +275,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  highlightIcon: {
-    fontSize: 20,
+  highlightIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginRight: 12,
   },
   highlightText: {

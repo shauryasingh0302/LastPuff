@@ -1,32 +1,35 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-    View,
-    Text,
-    StyleSheet,
-    TouchableOpacity,
-    Alert,
-    ScrollView,
-    TextInput,
-    Modal,
-    Switch,
-    Dimensions,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import MapView, { Marker, Circle, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
+import React, { useEffect, useRef, useState } from 'react';
 import {
-    GeofenceZone,
-    requestPermissions,
-    getGeofenceZones,
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    FlatList,
+    Keyboard,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from 'react-native';
+import MapView, { Circle, Marker, Region } from 'react-native-maps';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LPColors } from '../../constants/theme';
+import {
     addGeofenceZone,
+    GeofenceZone,
+    getCurrentLocation,
+    getGeofenceZones,
+    isGeofencingActive,
     removeGeofenceZone,
+    requestPermissions,
     startGeofencing,
     stopGeofencing,
-    getCurrentLocation,
-    isGeofencingActive,
 } from '../../services/geofencing';
-import { LPColors } from '../../constants/theme';
 
 const { width, height } = Dimensions.get('window');
 
@@ -44,7 +47,15 @@ export default function GeofencingNative() {
     const [notifyOnEnter, setNotifyOnEnter] = useState(true);
     const [notifyOnExit, setNotifyOnExit] = useState(true);
 
+    // Search state
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState<Location.LocationGeocodedAddress[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [showSearchResults, setShowSearchResults] = useState(false);
+    const [selectedSearchResult, setSelectedSearchResult] = useState<string>('');
+
     const mapRef = useRef<MapView>(null);
+    const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         initializeGeofencing();
@@ -188,6 +199,125 @@ export default function GeofencingNative() {
         }
     };
 
+    // Search for locations using geocoding
+    const searchLocation = async (query: string) => {
+        if (query.trim().length < 3) {
+            setSearchResults([]);
+            setShowSearchResults(false);
+            return;
+        }
+
+        setIsSearching(true);
+        try {
+            // Use expo-location geocoding
+            const results = await Location.geocodeAsync(query);
+
+            if (results.length > 0) {
+                // Get address details for each result
+                const addressPromises = results.slice(0, 5).map(async (result) => {
+                    const addresses = await Location.reverseGeocodeAsync({
+                        latitude: result.latitude,
+                        longitude: result.longitude,
+                    });
+                    return {
+                        ...addresses[0],
+                        latitude: result.latitude,
+                        longitude: result.longitude,
+                    };
+                });
+
+                const addresses = await Promise.all(addressPromises);
+                setSearchResults(addresses as any);
+                setShowSearchResults(true);
+            } else {
+                setSearchResults([]);
+                setShowSearchResults(true);
+            }
+        } catch (error) {
+            console.error('Search error:', error);
+            Alert.alert('Search Error', 'Could not search for locations. Please try again.');
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    // Handle search input change with debounce
+    const handleSearchChange = (text: string) => {
+        setSearchQuery(text);
+
+        // Clear previous timeout
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
+        }
+
+        // Debounce search
+        searchTimeoutRef.current = setTimeout(() => {
+            searchLocation(text);
+        }, 500);
+    };
+
+    // Handle selecting a search result
+    const handleSelectSearchResult = (result: any) => {
+        Keyboard.dismiss();
+        setShowSearchResults(false);
+
+        // Format address for zone name
+        const addressParts = [];
+        if (result.name) addressParts.push(result.name);
+        if (result.street) addressParts.push(result.street);
+        if (result.city) addressParts.push(result.city);
+
+        const formattedAddress = addressParts.length > 0
+            ? addressParts.join(', ')
+            : searchQuery;
+
+        setSelectedSearchResult(formattedAddress);
+        setNewZoneName(formattedAddress);
+
+        // Navigate to the location
+        const coordinate = {
+            latitude: result.latitude,
+            longitude: result.longitude,
+        };
+
+        setSelectedLocation(coordinate);
+
+        if (mapRef.current) {
+            mapRef.current.animateToRegion({
+                latitude: result.latitude,
+                longitude: result.longitude,
+                latitudeDelta: 0.005,
+                longitudeDelta: 0.005,
+            });
+        }
+
+        // Clear search
+        setSearchQuery('');
+        setSearchResults([]);
+
+        // Open add modal
+        setShowAddModal(true);
+    };
+
+    // Clear search
+    const clearSearch = () => {
+        setSearchQuery('');
+        setSearchResults([]);
+        setShowSearchResults(false);
+        Keyboard.dismiss();
+    };
+
+    // Format address for display
+    const formatSearchResult = (result: any) => {
+        const parts = [];
+        if (result.name) parts.push(result.name);
+        if (result.street) parts.push(result.street);
+        if (result.city) parts.push(result.city);
+        if (result.region) parts.push(result.region);
+        if (result.country) parts.push(result.country);
+        return parts.join(', ') || 'Unknown location';
+    };
+
     const initialRegion: Region = currentLocation
         ? {
             latitude: currentLocation.coords.latitude,
@@ -229,6 +359,67 @@ export default function GeofencingNative() {
                     {isActive ? 'Geofencing Active' : 'Geofencing Disabled'}
                 </Text>
                 <Text style={styles.zoneCount}>{zones.length} zones</Text>
+            </View>
+
+            {/* Search Bar */}
+            <View style={styles.searchContainer}>
+                <View style={styles.searchInputContainer}>
+                    <Ionicons name="search" size={20} color={LPColors.textGray} style={styles.searchIcon} />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Search for a location..."
+                        placeholderTextColor={LPColors.textGray}
+                        value={searchQuery}
+                        onChangeText={handleSearchChange}
+                        returnKeyType="search"
+                        onSubmitEditing={() => searchLocation(searchQuery)}
+                    />
+                    {isSearching && (
+                        <ActivityIndicator size="small" color={LPColors.primary} style={styles.searchLoader} />
+                    )}
+                    {searchQuery.length > 0 && !isSearching && (
+                        <TouchableOpacity onPress={clearSearch} style={styles.clearButton}>
+                            <Ionicons name="close-circle" size={20} color={LPColors.textGray} />
+                        </TouchableOpacity>
+                    )}
+                </View>
+
+                {/* Search Results Dropdown */}
+                {showSearchResults && (
+                    <View style={styles.searchResultsContainer}>
+                        {searchResults.length === 0 ? (
+                            <View style={styles.noResultsContainer}>
+                                <Ionicons name="location-outline" size={24} color={LPColors.textGray} />
+                                <Text style={styles.noResultsText}>No locations found</Text>
+                                <Text style={styles.noResultsSubtext}>Try a different search term</Text>
+                            </View>
+                        ) : (
+                            <FlatList
+                                data={searchResults}
+                                keyExtractor={(_item: any, index: number) => `search-${index}`}
+                                keyboardShouldPersistTaps="handled"
+                                style={styles.searchResultsList}
+                                renderItem={({ item }: { item: any }) => (
+                                    <TouchableOpacity
+                                        style={styles.searchResultItem}
+                                        onPress={() => handleSelectSearchResult(item)}
+                                    >
+                                        <Ionicons name="location" size={20} color={LPColors.primary} />
+                                        <View style={styles.searchResultTextContainer}>
+                                            <Text style={styles.searchResultText} numberOfLines={1}>
+                                                {formatSearchResult(item)}
+                                            </Text>
+                                            <Text style={styles.searchResultSubtext} numberOfLines={1}>
+                                                {item.city || item.region || item.country || 'Tap to add zone'}
+                                            </Text>
+                                        </View>
+                                        <Ionicons name="add-circle-outline" size={20} color={LPColors.primary} />
+                                    </TouchableOpacity>
+                                )}
+                            />
+                        )}
+                    </View>
+                )}
             </View>
 
             {/* Map */}
@@ -285,7 +476,7 @@ export default function GeofencingNative() {
             <View style={styles.instructions}>
                 <Ionicons name="information-circle" size={20} color={LPColors.textGray} />
                 <Text style={styles.instructionsText}>
-                    Tap anywhere on the map to add a new zone
+                    Search or tap on the map to add a new zone
                 </Text>
             </View>
 
@@ -320,9 +511,9 @@ export default function GeofencingNative() {
                             </View>
                             <View style={styles.zoneNotifications}>
                                 <Text style={styles.notificationText}>
-                                    {zone.notifyOnEnter && '🔔 Enter'}
+                                    {zone.notifyOnEnter && 'Enter'}
                                     {zone.notifyOnEnter && zone.notifyOnExit && ' • '}
-                                    {zone.notifyOnExit && '🔔 Exit'}
+                                    {zone.notifyOnExit && 'Exit'}
                                 </Text>
                             </View>
                         </View>
@@ -561,6 +752,94 @@ const styles = StyleSheet.create({
     zoneCount: {
         fontSize: 12,
         color: LPColors.textGray,
+    },
+    // Search styles
+    searchContainer: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        zIndex: 10,
+    },
+    searchInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: LPColors.surfaceLight,
+        borderRadius: 12,
+        paddingHorizontal: 12,
+        height: 48,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.05)',
+    },
+    searchIcon: {
+        marginRight: 8,
+    },
+    searchInput: {
+        flex: 1,
+        fontSize: 16,
+        color: LPColors.text,
+        height: '100%',
+    },
+    searchLoader: {
+        marginLeft: 8,
+    },
+    clearButton: {
+        padding: 4,
+        marginLeft: 4,
+    },
+    searchResultsContainer: {
+        position: 'absolute',
+        top: 60,
+        left: 16,
+        right: 16,
+        backgroundColor: LPColors.surface,
+        borderRadius: 12,
+        maxHeight: 250,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8,
+        borderWidth: 1,
+        borderColor: LPColors.border,
+        zIndex: 100,
+    },
+    searchResultsList: {
+        maxHeight: 250,
+    },
+    searchResultItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 14,
+        borderBottomWidth: 1,
+        borderBottomColor: LPColors.border,
+        gap: 12,
+    },
+    searchResultTextContainer: {
+        flex: 1,
+    },
+    searchResultText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: LPColors.text,
+    },
+    searchResultSubtext: {
+        fontSize: 12,
+        color: LPColors.textGray,
+        marginTop: 2,
+    },
+    noResultsContainer: {
+        alignItems: 'center',
+        padding: 24,
+    },
+    noResultsText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: LPColors.text,
+        marginTop: 8,
+    },
+    noResultsSubtext: {
+        fontSize: 12,
+        color: LPColors.textGray,
+        marginTop: 4,
     },
     mapContainer: {
         height: height * 0.4,

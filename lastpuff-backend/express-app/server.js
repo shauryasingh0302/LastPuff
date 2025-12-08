@@ -1,10 +1,10 @@
-import dotenv from "dotenv";
-dotenv.config();
-import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
+import express from "express";
 import { connectDB } from "./config/connectDB.js";
 import authRoutes from "./routes/authRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
+dotenv.config();
 
 const app = express();
 app.use(cors());
@@ -23,6 +23,9 @@ app.use("/api/posts", postRoutes);
 
 app.use("/auth", authRoutes);
 app.use("/dashboard", dashboardRoutes);
+
+import aiCoachRoutes from "./routes/aiCoachRoutes.js";
+app.use("/ai-coach", aiCoachRoutes);
 
 app.get("/", (req, res) => {
   res.send("LastPuff API Running");

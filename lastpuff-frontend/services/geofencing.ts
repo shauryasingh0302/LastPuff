@@ -1,7 +1,7 @@
-import * as Location from 'expo-location';
-import * as TaskManager from 'expo-task-manager';
-import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Location from 'expo-location';
+import * as Notifications from 'expo-notifications';
+import * as TaskManager from 'expo-task-manager';
 
 // Task name for background geofencing
 const GEOFENCING_TASK = 'GEOFENCING_TASK';
@@ -26,6 +26,8 @@ Notifications.setNotificationHandler({
         shouldShowAlert: true,
         shouldPlaySound: true,
         shouldSetBadge: false,
+        shouldShowBanner: true,
+        shouldShowList: true,
     }),
 });
 
@@ -143,10 +145,15 @@ export async function removeGeofenceZone(zoneId: string): Promise<void> {
  */
 export async function startGeofencing(): Promise<void> {
     try {
-        // Stop existing geofencing first
-        const isTaskDefined = await TaskManager.isTaskDefined(GEOFENCING_TASK);
-        if (isTaskDefined) {
-            await Location.stopGeofencingAsync(GEOFENCING_TASK);
+        // Check if task is registered and stop it first
+        const isRegistered = await TaskManager.isTaskRegisteredAsync(GEOFENCING_TASK);
+        if (isRegistered) {
+            console.log('Stopping existing geofencing task...');
+            try {
+                await Location.stopGeofencingAsync(GEOFENCING_TASK);
+            } catch (stopError) {
+                console.log('Note: Could not stop previous geofencing (may not have been active)');
+            }
         }
 
         const zones = await getGeofenceZones();
@@ -165,9 +172,11 @@ export async function startGeofencing(): Promise<void> {
             notifyOnExit: zone.notifyOnExit,
         }));
 
+        console.log('Starting geofencing with regions:', regions.map(r => ({ id: r.identifier, lat: r.latitude, lng: r.longitude, radius: r.radius })));
+
         // Start geofencing
         await Location.startGeofencingAsync(GEOFENCING_TASK, regions);
-        console.log('Geofencing started for', regions.length, 'zones');
+        console.log('Geofencing started successfully for', regions.length, 'zones');
     } catch (error) {
         console.error('Error starting geofencing:', error);
         throw error;
@@ -199,19 +208,19 @@ async function sendGeofenceNotification(zone: GeofenceZone, eventType: 'enter' |
 
         if (zone.type === 'trigger') {
             if (eventType === 'enter') {
-                title = '⚠️ Trigger Zone Alert';
+                title = 'Trigger Zone Alert';
                 body = `You're entering "${zone.name}". Stay strong! Remember your goals.`;
             } else {
-                title = '✅ Left Trigger Zone';
+                title = 'Left Trigger Zone';
                 body = `You've left "${zone.name}". Great job avoiding temptation!`;
             }
         } else {
             // safe zone
             if (eventType === 'enter') {
-                title = '🛡️ Safe Zone';
+                title = 'Safe Zone';
                 body = `Welcome to "${zone.name}" - a smoke-free zone. You've got this!`;
             } else {
-                title = '👋 Leaving Safe Zone';
+                title = 'Leaving Safe Zone';
                 body = `You're leaving "${zone.name}". Stay committed to your goals!`;
             }
         }

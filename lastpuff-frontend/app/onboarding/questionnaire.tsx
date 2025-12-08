@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useContext, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LPColors } from '../../constants/theme';
-import { useGoals, PlanType } from '../../context/GoalsContext';
+import { AuthContext } from '../../context/AuthContext';
+import { PlanType, useGoals } from '../../context/GoalsContext';
+import API from '../../services/api';
 
 const QUESTIONS = [
     {
@@ -59,12 +61,37 @@ const QUESTIONS = [
     }
 ];
 
+interface SignupResponse {
+    user: any;
+    token: string;
+}
+
 export default function QuestionnaireScreen() {
     const { setPlan } = useGoals();
+    const auth: any = useContext(AuthContext);
+    const params = useLocalSearchParams();
+
     const [currentStep, setCurrentStep] = useState(0);
     const [answers, setAnswers] = useState<Record<number, string>>({});
-    debugger; // Intentional debugger for dev if needed
     const [showPlans, setShowPlans] = useState(false);
+    const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+    const [signupData, setSignupData] = useState<any>(null);
+
+    // Parse signup data on mount
+    useEffect(() => {
+        console.log('[Questionnaire] Raw params:', JSON.stringify(params));
+        if (params.signupData) {
+            try {
+                const parsed = JSON.parse(params.signupData as string);
+                console.log('[Questionnaire] Parsed signupData:', parsed.email);
+                setSignupData(parsed);
+            } catch (e) {
+                console.error('[Questionnaire] Failed to parse signupData:', e);
+            }
+        } else {
+            console.log('[Questionnaire] No signupData in params');
+        }
+    }, [params.signupData]);
 
     // Calculate progress
     const progress = ((currentStep + 1) / QUESTIONS.length) * 100;
@@ -79,17 +106,88 @@ export default function QuestionnaireScreen() {
         }
     };
 
-    const handleSelectPlan = (plan: PlanType) => {
-        setPlan(plan);
-        router.replace('/(tabs)');
+    const handleSelectPlan = async (plan: PlanType) => {
+        console.log('[Questionnaire] handleSelectPlan called, plan:', plan, 'signupData:', signupData ? 'YES' : 'NO');
+
+        // If we have signup data, create the account now
+        if (signupData) {
+            setIsCreatingAccount(true);
+            try {
+                console.log('[Questionnaire] Creating account for:', signupData.email);
+                // Create the user account
+                const res = await API.post<SignupResponse>("/auth/signup", signupData);
+                const { user, token } = res.data;
+                console.log('[Questionnaire] Account created successfully');
+
+                // Log the user in
+                await auth.loginUser(user, token);
+
+                // Set the plan
+                setPlan(plan);
+
+                // Navigate to main app
+                router.replace('/(tabs)');
+            } catch (err: any) {
+                console.error('[Questionnaire] Signup error:', err.response?.data || err.message);
+                setIsCreatingAccount(false);
+                Alert.alert(
+                    "Signup Failed",
+                    err.response?.data?.message || "Could not create your account. Please try again.",
+                    [
+                        { text: "Try Again", style: "cancel" },
+                        { text: "Go Back", onPress: () => router.replace('/auth/signup') }
+                    ]
+                );
+            }
+        } else {
+            // Existing user just updating plan
+            console.log('[Questionnaire] No signup data, just setting plan');
+            setPlan(plan);
+            router.replace('/(tabs)');
+        }
     };
 
+    const handleCancel = () => {
+        console.log('[Questionnaire] handleCancel called, signupData:', signupData ? 'YES' : 'NO');
+
+        // Always show confirmation and go to login screen
+        // This ensures signup process is completely cancelled
+        Alert.alert(
+            "Cancel Signup?",
+            "Your account will not be created. You'll be taken back to the login screen.",
+            [
+                { text: "Continue Signup", style: "cancel" },
+                {
+                    text: "Cancel",
+                    style: "destructive",
+                    onPress: () => {
+                        console.log('[Questionnaire] User confirmed cancel, going to login');
+                        // Go to login screen - this ensures no redirect to home
+                        router.replace('/auth/login');
+                    }
+                }
+            ]
+        );
+    };
+
+    // Plan selection screen
     if (showPlans) {
         return (
             <SafeAreaView style={styles.container}>
+                {/* Loading Overlay */}
+                {isCreatingAccount && (
+                    <View style={styles.loadingOverlay}>
+                        <ActivityIndicator size="large" color={LPColors.primary} />
+                        <Text style={styles.loadingText}>Creating your account...</Text>
+                    </View>
+                )}
                 <ScrollView contentContainerStyle={styles.scrollContent}>
                     <Text style={styles.planTitle}>Choose Your Path</Text>
-                    <Text style={styles.planSubtitle}>Based on your answers, we recommend starting a structured plan.</Text>
+                    <Text style={styles.planSubtitle}>
+                        {signupData
+                            ? "Select a plan to complete your signup!"
+                            : "Select your quit smoking approach."}
+                    </Text>
 
                     {/* Cold Turkey Card */}
                     <View style={styles.planCard}>
@@ -98,7 +196,7 @@ export default function QuestionnaireScreen() {
                         </View>
                         <Text style={styles.cardTitle}>Cold Turkey</Text>
                         <Text style={styles.cardDesc}>
-                            Stop smoking completely right now. Best for highly motivated individuals who want immediate results.
+                            Stop smoking completely right now. Best for highly motivated individuals.
                         </Text>
                         <View style={styles.benefitList}>
                             <Text style={styles.benefitItem}>• Instant health benefits</Text>
@@ -106,10 +204,13 @@ export default function QuestionnaireScreen() {
                             <Text style={styles.benefitItem}>• Requires high willpower</Text>
                         </View>
                         <TouchableOpacity
-                            style={[styles.selectButton, { backgroundColor: '#FF3B30' }]}
+                            style={[styles.selectButton, { backgroundColor: '#FF3B30' }, isCreatingAccount && styles.buttonDisabled]}
                             onPress={() => handleSelectPlan('cold-turkey')}
+                            disabled={isCreatingAccount}
                         >
-                            <Text style={styles.selectButtonText}>Select Cold Turkey</Text>
+                            <Text style={styles.selectButtonText}>
+                                {isCreatingAccount ? 'Creating Account...' : 'Select Cold Turkey'}
+                            </Text>
                         </TouchableOpacity>
                     </View>
 
@@ -120,7 +221,7 @@ export default function QuestionnaireScreen() {
                         </View>
                         <Text style={styles.cardTitle}>Gradual Reduction</Text>
                         <Text style={styles.cardDesc}>
-                            Slowly reduce cigarettes over time. Best for heavy smokers or those who want to minimize withdrawal.
+                            Slowly reduce cigarettes over time. Best for heavy smokers.
                         </Text>
                         <View style={styles.benefitList}>
                             <Text style={styles.benefitItem}>• Less intense withdrawal</Text>
@@ -128,25 +229,38 @@ export default function QuestionnaireScreen() {
                             <Text style={styles.benefitItem}>• Easier to start</Text>
                         </View>
                         <TouchableOpacity
-                            style={[styles.selectButton, { backgroundColor: LPColors.primary }]}
+                            style={[styles.selectButton, { backgroundColor: LPColors.primary }, isCreatingAccount && styles.buttonDisabled]}
                             onPress={() => handleSelectPlan('gradual')}
+                            disabled={isCreatingAccount}
                         >
-                            <Text style={[styles.selectButtonText, { color: '#000' }]}>Select Gradual Reduction</Text>
+                            <Text style={[styles.selectButtonText, { color: '#000' }]}>
+                                {isCreatingAccount ? 'Creating Account...' : 'Select Gradual'}
+                            </Text>
                         </TouchableOpacity>
                     </View>
+
+                    {/* Cancel button */}
+                    <TouchableOpacity
+                        style={styles.cancelButton}
+                        onPress={handleCancel}
+                        disabled={isCreatingAccount}
+                    >
+                        <Text style={styles.cancelButtonText}>Cancel</Text>
+                    </TouchableOpacity>
                 </ScrollView>
             </SafeAreaView>
         );
     }
 
+    // Questions screen
     const currentQuestion = QUESTIONS[currentStep];
 
     return (
         <SafeAreaView style={styles.container}>
             {/* Header / Progress */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                    <Ionicons name="close" size={24} color={LPColors.textGray} />
+                <TouchableOpacity onPress={handleCancel} style={styles.backBtn}>
+                    <Ionicons name="close" size={28} color={LPColors.text} />
                 </TouchableOpacity>
                 <View style={styles.progressBarBg}>
                     <View style={[styles.progressBarFill, { width: `${progress}%` }]} />
@@ -186,12 +300,12 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-        gap: 10,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        gap: 12,
     },
     backBtn: {
-        padding: 4,
+        padding: 8,
     },
     progressBarBg: {
         flex: 1,
@@ -208,7 +322,7 @@ const styles = StyleSheet.create({
         color: LPColors.textGray,
         fontSize: 12,
         fontWeight: '600',
-        width: 30,
+        minWidth: 35,
         textAlign: 'right',
     },
     questionContainer: {
@@ -301,5 +415,35 @@ const styles = StyleSheet.create({
         color: '#FFF',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    buttonDisabled: {
+        opacity: 0.5,
+    },
+    loadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.85)',
+        zIndex: 100,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    loadingText: {
+        color: LPColors.text,
+        fontSize: 16,
+        marginTop: 16,
+        fontWeight: '500',
+    },
+    cancelButton: {
+        paddingVertical: 16,
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    cancelButtonText: {
+        color: LPColors.textGray,
+        fontSize: 16,
+        fontWeight: '500',
     },
 });

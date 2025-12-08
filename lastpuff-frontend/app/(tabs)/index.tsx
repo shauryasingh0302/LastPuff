@@ -1,18 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Link, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useContext, useEffect, useState } from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert, Pressable } from 'react-native';
+import { Dimensions, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
 import Shine from '../../components/Shine';
-import { AuthContext } from '../../context/AuthContext';
-import { fetchDashboardSummary } from '../../services/api';
 import { LPColors } from '../../constants/theme';
+import { AuthContext } from '../../context/AuthContext';
 import { useGoals } from '../../context/GoalsContext';
-import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics';
+import { fetchDashboardSummary } from '../../services/api';
 
 const { width } = Dimensions.get('window');
 
@@ -75,11 +75,11 @@ export default function HomeScreen() {
     toggleGoalCompletion(goalId);
   };
 
-  const cigsToday = dashboard?.today?.cigarettesAvoided ?? 0;
-  const moneyToday = dashboard?.today?.moneySaved ?? 0;
-  const goalsToday = dashboard?.today?.goalsCompleted ?? 0;
-  const streak = dashboard?.streak ?? 0;
-  const puffCoins = dashboard?.puffCoins ?? 0;
+  const cigsToday = 0; // dashboard?.today?.cigarettesAvoided ?? 0;
+  const moneyToday = 0; // dashboard?.today?.moneySaved ?? 0;
+  const goalsToday = 0; // dashboard?.today?.goalsCompleted ?? 0;
+  const streak = 0; // dashboard?.streak ?? 0;
+  const puffCoins = 0; // dashboard?.puffCoins ?? 0;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -150,16 +150,17 @@ export default function HomeScreen() {
             </View>
           </View>
 
+
           {/* Health Card */}
           <View style={[styles.gridCard, { flex: 1 }]}>
             <View style={styles.healthStats}>
               <View style={styles.healthItem}>
-                <Text style={styles.healthVal}>-3%</Text>
+                <Text style={styles.healthVal}>0%</Text>
                 <Text style={styles.healthLabel}>LC Risk</Text>
               </View>
               <View style={styles.divider} />
               <View style={styles.healthItem}>
-                <Text style={styles.healthVal}>-2%</Text>
+                <Text style={styles.healthVal}>0%</Text>
                 <Text style={styles.healthLabel}>Cancer</Text>
               </View>
             </View>
@@ -248,26 +249,17 @@ export default function HomeScreen() {
             <View style={styles.impactRow}>
               <View>
                 <Text style={styles.impactLabel}>Cigarettes Avoided</Text>
-                <Text style={styles.impactValue}>1.2M</Text>
+                <Text style={styles.impactValue}>0</Text>
               </View>
               <View>
                 <Text style={styles.impactLabel}>Money Saved</Text>
-                <Text style={styles.impactValue}>₹42.5M</Text>
+                <Text style={styles.impactValue}>₹0</Text>
               </View>
             </View>
           </Shine>
         </Animated.View>
 
       </ScrollView>
-
-      <TouchableOpacity style={styles.fab}>
-        <LinearGradient
-          colors={[LPColors.primary, '#004d2c']}
-          style={styles.fabGradient}
-        >
-          <Ionicons name="chatbubbles" size={24} color="#000" />
-        </LinearGradient>
-      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -403,22 +395,4 @@ const styles = StyleSheet.create({
   impactRow: { flexDirection: 'row', justifyContent: 'space-between' },
   impactLabel: { fontSize: 12, color: LPColors.textGray },
   impactValue: { fontSize: 20, fontWeight: 'bold', color: '#FFF', marginTop: 4 },
-
-  fab: {
-    position: 'absolute',
-    bottom: 100,
-    right: 20,
-    shadowColor: LPColors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  fabGradient: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 });

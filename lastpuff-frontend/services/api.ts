@@ -5,9 +5,11 @@ import { Platform } from "react-native";
 
 // ---------------- BASE URL HANDLING ----------------
 let BASE_URL = "http://localhost:5000"; // Default for Web & iOS
+// let BASE_URL = "https://lastpuff-backend.onrender.com";
 
 if (Platform.OS === "android") {
-  BASE_URL = "http://localhost:5000"; // Android emulator
+  BASE_URL = "http://localhost:5000";
+  // BASE_URL = "https://lastpuff-backend.onrender.com";
 }
 
 // For real physical phone on same WiFi, replace manually with your PC IP
@@ -57,5 +59,14 @@ export const fetchDashboardSummary = () =>
 
 export const updateDailyGoals = (goalsCompleted: number) =>
   API.post("/dashboard/update-goals", { goalsCompleted });
+
+// ---------- AI COACH ----------
+interface ChatMessage {
+  text: string;
+  sender: 'user' | 'ai';
+}
+
+export const chatWithAICoach = (message: string, chatHistory: ChatMessage[]) =>
+  API.post("/ai-coach/chat", { message, chatHistory });
 
 export default API;

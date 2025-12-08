@@ -2,10 +2,14 @@ import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useContext, useEffect } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import 'react-native-reanimated';
-import { AuthProvider, AuthContext } from '../context/AuthContext';
+import FloatingChatButton from '../components/FloatingChatButton';
+import { AuthContext, AuthProvider } from '../context/AuthContext';
 import { GoalsProvider } from '../context/GoalsContext';
+
+// Import geofencing service to register background task at app startup
+import '../services/geofencing';
 
 import { LPColors } from '../constants/theme';
 
@@ -33,14 +37,17 @@ function ProtectedNavigation() {
     if (loading) return; // wait until AsyncStorage loaded
 
     const inAuthGroup = segments[0] === 'auth';
+    const inOnboarding = segments[0] === 'onboarding';
 
-    if (!token && !inAuthGroup) {
-      // Not logged in → force to login
+    if (!token && !inAuthGroup && !inOnboarding) {
+      // Not logged in and not in auth/onboarding screens → force to login
       router.replace('/auth/login');
-    } else if (token && inAuthGroup) {
-      // Logged in but on auth screen → send to app
+    } else if (token && inAuthGroup && segments[1] !== 'signup') {
+      // Logged in but on auth screen (but NOT signup) → send to app
+      // We exclude signup because it handles its own redirect to onboarding
       router.replace('/(tabs)');
     }
+    // Allow onboarding screens for both logged-in users and during signup flow
   }, [loading, token, segments]);
 
   // 🌓 While loading from storage, don't show tabs or login yet
@@ -67,8 +74,20 @@ function ProtectedNavigation() {
       <Stack.Screen name="auth/login" />
       <Stack.Screen name="auth/signup" />
 
+      {/* Onboarding */}
+      <Stack.Screen name="onboarding/questionnaire" />
+
       {/* Main app */}
       <Stack.Screen name="(tabs)" />
+
+      {/* AI Coach */}
+      <Stack.Screen
+        name="ai-coach"
+        options={{
+          presentation: 'card',
+          animation: 'slide_from_bottom',
+        }}
+      />
 
       {/* Optional modal */}
       <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
@@ -81,10 +100,19 @@ export default function RootLayout() {
     <AuthProvider>
       <GoalsProvider>
         <ThemeProvider value={LastPuffTheme}>
-          <ProtectedNavigation />
+          <View style={styles.container}>
+            <ProtectedNavigation />
+            <FloatingChatButton />
+          </View>
           <StatusBar style="light" />
         </ThemeProvider>
       </GoalsProvider>
     </AuthProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+});
