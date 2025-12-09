@@ -10,11 +10,11 @@ export default function FloatingChatButton() {
     const router = useRouter();
     const segments = useSegments();
 
-    // Hide on certain screens
+
     const shouldHide =
-        segments.some(seg => seg === 'ai-coach') || // Don't show on AI coach screen itself
-        segments.some(seg => seg === 'auth') || // Don't show on auth screens
-        segments.some(seg => seg === 'onboarding'); // Don't show on onboarding
+        segments.some(seg => seg === 'ai-coach') ||
+        segments.some(seg => seg === 'auth') ||
+        segments.some(seg => seg === 'onboarding');
 
     if (shouldHide) return null;
 
@@ -31,10 +31,12 @@ export default function FloatingChatButton() {
                 style={styles.buttonContainer}
             >
                 <LinearGradient
-                    colors={[LPColors.primary, '#004d2c']}
-                    style={styles.gradient}
+                    colors={[LPColors.gradientStart, LPColors.gradientEnd]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={[styles.gradient, LPColors.shadow]}
                 >
-                    <Ionicons name="chatbubbles" size={22} color="#000" />
+                    <Ionicons name="chatbubbles" size={24} color="#000" />
                 </LinearGradient>
             </TouchableOpacity>
         </View>
@@ -49,15 +51,16 @@ const styles = StyleSheet.create({
         zIndex: 999,
     },
     buttonContainer: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        overflow: 'hidden',
+        borderRadius: 30,
+        ...LPColors.shadow,
     },
     gradient: {
-        width: '100%',
-        height: '100%',
+        width: 60,
+        height: 60,
+        borderRadius: 30,
         alignItems: 'center',
         justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
     },
 });

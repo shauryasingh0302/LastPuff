@@ -21,7 +21,7 @@ export default function AIFocusGame() {
     }, [isPlaying, timeLeft]);
 
     useEffect(() => {
-        // Pulse animation
+
         Animated.loop(
             Animated.sequence([
                 Animated.timing(pulseAnim, {
@@ -52,7 +52,7 @@ export default function AIFocusGame() {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header */}
+            {}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="chevron-back" size={28} color={LPColors.primary} />
@@ -64,18 +64,18 @@ export default function AIFocusGame() {
                 </View>
             </View>
 
-            {/* Instructions */}
+            {}
             <Text style={styles.instructions}>
                 Focus on the center and tap when you feel the urge. Train your mind to resist cravings!
             </Text>
 
-            {/* Timer */}
+            {}
             <View style={styles.timerContainer}>
                 <Text style={styles.timerLabel}>Time Left</Text>
                 <Text style={styles.timerValue}>{timeLeft}s</Text>
             </View>
 
-            {/* Focus Area */}
+            {}
             <View style={styles.focusArea}>
                 <TouchableOpacity
                     style={styles.focusCircle}
@@ -103,7 +103,7 @@ export default function AIFocusGame() {
                 </TouchableOpacity>
             </View>
 
-            {/* Stats */}
+            {}
             <View style={styles.statsContainer}>
                 <View style={styles.statBox}>
                     <Ionicons name="flash" size={24} color={LPColors.primary} />
@@ -117,7 +117,7 @@ export default function AIFocusGame() {
                 </View>
             </View>
 
-            {/* Controls */}
+            {}
             <View style={styles.controls}>
                 {!isPlaying ? (
                     <TouchableOpacity style={styles.startButton} onPress={handleStart}>
@@ -135,7 +135,7 @@ export default function AIFocusGame() {
                 )}
             </View>
 
-            {/* Info */}
+            {}
             <View style={styles.infoCard}>
                 <Ionicons name="information-circle" size={20} color={LPColors.primary} />
                 <Text style={styles.infoText}>

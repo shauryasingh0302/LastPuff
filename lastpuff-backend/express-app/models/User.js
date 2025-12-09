@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema(
     heightCm: { type: Number },
     weightKg: { type: Number },
 
-    isSmoker: { type: Boolean, default: false },
+    isSmoker: { type: Boolean, default: true },
 
     plan: { type: String, enum: ["gradual", "aggressive", "none"], default: "none" },
 
@@ -26,6 +26,12 @@ const userSchema = new mongoose.Schema(
 
     puffCoins: { type: Number, default: 0 },
     totalRelapses: { type: Number, default: 0 },
+    
+    // Flexible objects for questionnaire data
+    smokingData: { type: Object, default: {} },
+    healthData: { type: Object, default: {} },
+    
+    pushToken: { type: String, default: null },
 
     dailyStats: [dailyStatsSchema],
   },

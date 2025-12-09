@@ -2,7 +2,7 @@ import { Comment } from "../models/comment.model.js";
 import { Post } from "../models/post.model.js";
 import mongoose from "mongoose";
 
-// CREATE COMMENT
+
 export const createComment = async (req, res) => {
   try {
     const { postId } = req.params;
@@ -24,7 +24,7 @@ export const createComment = async (req, res) => {
       content,
     });
 
-    // increase comment count
+
     post.commentsCount += 1;
     await post.save();
 
@@ -35,7 +35,7 @@ export const createComment = async (req, res) => {
   }
 };
 
-// GET COMMENTS FOR POST
+
 export const getComments = async (req, res) => {
   try {
     const { postId } = req.params;
@@ -51,7 +51,7 @@ export const getComments = async (req, res) => {
   }
 };
 
-// DELETE COMMENT
+
 export const deleteComment = async (req, res) => {
   try {
     const { commentId } = req.params;
@@ -65,7 +65,7 @@ export const deleteComment = async (req, res) => {
 
     await Comment.deleteOne({ _id: commentId });
 
-    // decrease comment count
+
     await Post.updateOne(
       { _id: comment.post },
       { $inc: { commentsCount: -1 } }

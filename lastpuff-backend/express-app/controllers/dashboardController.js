@@ -1,10 +1,10 @@
-import User from "../models/User.js";
 import dayjs from "dayjs";
+import User from "../models/User.js";
+import { calculateHealthRiskWithAI } from "../services/aiService.js";
 
-// ===================== DASHBOARD SUMMARY =====================
 export const getDashboardSummary = async (req, res) => {
   try {
-    // req.user only contains: { id: userId }
+
     const user = await User.findById(req.user.id);
 
     if (!user) {
@@ -20,6 +20,15 @@ export const getDashboardSummary = async (req, res) => {
         goalsCompleted: 0,
       };
 
+    let healthRisks = { lungRisk: 0, strokeRisk: 0 };
+    if (user.isSmoker) {
+         try {
+             healthRisks = await calculateHealthRiskWithAI(user);
+         } catch (e) {
+             console.log('Risk calc failed', e);
+         }
+    }
+
     return res.status(200).json({
       success: true,
       name: user.name,
@@ -27,6 +36,7 @@ export const getDashboardSummary = async (req, res) => {
       puffCoins: user.puffCoins || 0,
       totalRelapses: user.totalRelapses || 0,
       todayStats,
+      healthRisks,
     });
   } catch (err) {
     console.error("Dashboard summary error:", err);
@@ -34,7 +44,7 @@ export const getDashboardSummary = async (req, res) => {
   }
 };
 
-// ===================== GOAL PROGRESS UPDATE =====================
+
 export const updateGoalProgress = async (req, res) => {
   try {
     const { goalsCompletedToday } = req.body;
@@ -60,7 +70,7 @@ export const updateGoalProgress = async (req, res) => {
       });
     }
 
-    // streak update
+
     if (goalsCompletedToday >= 5) {
       if (user.lastStreakUpdateDate !== today) {
         user.streak = (user.streak || 0) + 1;

@@ -1,4 +1,4 @@
-// models/post.model.js
+
 import mongoose from "mongoose";
 
 const postSchema = new mongoose.Schema(
@@ -49,7 +49,7 @@ const postSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Optionally return virtuals when converting to JSON
+
 postSchema.set("toJSON", { virtuals: true, versionKey: false });
 postSchema.set("toObject", { virtuals: true, versionKey: false });
 

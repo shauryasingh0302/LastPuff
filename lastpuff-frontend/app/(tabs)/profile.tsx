@@ -3,12 +3,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from "expo-router";
 import React, { useContext, useEffect, useState } from "react";
 import {
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Image,
+    RefreshControl,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -27,26 +28,34 @@ export default function ProfileScreen() {
     goalsCompleted: 0,
   });
 
-  // Fetch dashboard summary
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const res = await fetchDashboardSummary();
-        // setStats(res.data as {
-        //   streakDays: number;
-        //   cravingsHandled: number;
-        //   moneySaved: number;
-        //   goalsCompleted: number;
-        // });
-      } catch (err) {
-        console.log("Dashboard error:", err);
-      }
-    };
+  const [refreshing, setRefreshing] = useState(false);
 
+
+  const loadStats = async () => {
+    try {
+      const res = await fetchDashboardSummary();
+
+
+
+
+
+
+    } catch (err) {
+      console.log("Dashboard error:", err);
+    }
+  };
+
+  useEffect(() => {
     loadStats();
   }, []);
 
-  const settings = [
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await loadStats();
+    setRefreshing(false);
+  }, []);
+
+  const settings: { icon: any; name: string; route?: string }[] = [
     { icon: "person-outline", name: "Edit Profile" },
     { icon: "notifications-outline", name: "Notification Settings" },
     { icon: "flag-outline", name: "Manage Goals" },
@@ -61,12 +70,29 @@ export default function ProfileScreen() {
     : "2024";
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <LinearGradient
+      colors={[LPColors.bg, '#000000']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
+    >
+    <SafeAreaView style={[styles.container, { backgroundColor: 'transparent' }]}>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={LPColors.primary}
+            colors={[LPColors.primary]}
+          />
+        }
+      >
         <Animated.View entering={FadeInDown.delay(100).duration(500)}>
-          {/* Profile Header */}
+          { }
           <View style={styles.profileHeader}>
-            {/* Avatar */}
+            { }
             {user?.avatarUrl ? (
               <Image source={{ uri: user.avatarUrl }} style={styles.avatar} />
             ) : (
@@ -88,7 +114,7 @@ export default function ProfileScreen() {
           </View>
         </Animated.View>
 
-        {/* Stats */}
+        { }
         <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.statsContainer}>
           <View style={styles.statBox}>
             <Ionicons name="flame-outline" size={20} color={LPColors.primary} />
@@ -107,7 +133,7 @@ export default function ProfileScreen() {
           </View>
         </Animated.View>
 
-        {/* Overview Section */}
+        { }
         <Animated.View entering={FadeInDown.delay(300).duration(500)} style={styles.section}>
           <Text style={styles.sectionTitle}>Your Journey Overview</Text>
 
@@ -131,7 +157,7 @@ export default function ProfileScreen() {
           </View>
         </Animated.View>
 
-        {/* Badges Section */}
+        { }
         <Animated.View entering={FadeInDown.delay(400).duration(500)} style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Badges Earned</Text>
@@ -158,7 +184,40 @@ export default function ProfileScreen() {
           </View>
         </Animated.View>
 
-        {/* Settings List */}
+        {user?.smokingData && (
+          <Animated.View entering={FadeInDown.delay(450).duration(500)} style={styles.section}>
+            <Text style={styles.sectionTitle}>Smoker Profile</Text>
+            <View style={styles.smokerProfileCard}>
+              <View style={styles.smokerRow}>
+                <View style={styles.smokerItem}>
+                  <Text style={styles.smokerLabel}>Daily Cigarettes</Text>
+                  <Text style={styles.smokerValue}>{user.smokingData.cigarettesPerDay || 'N/A'}</Text>
+                </View>
+                <View style={styles.smokerDivider} />
+                <View style={styles.smokerItem}>
+                  <Text style={styles.smokerLabel}>Main Trigger</Text>
+                  <Text style={styles.smokerValue}>{user.smokingData.trigger || 'N/A'}</Text>
+                </View>
+              </View>
+
+              <View style={styles.smokerRowSeparator} />
+
+              <View style={styles.smokerRow}>
+                <View style={styles.smokerItem}>
+                  <Text style={styles.smokerLabel}>Motivation</Text>
+                  <Text style={styles.smokerValue}>{user.smokingData.motivation || 'N/A'}</Text>
+                </View>
+                <View style={styles.smokerDivider} />
+                <View style={styles.smokerItem}>
+                  <Text style={styles.smokerLabel}>Quit Attempts</Text>
+                  <Text style={styles.smokerValue}>{user.smokingData.quitAttempts || 'N/A'}</Text>
+                </View>
+              </View>
+            </View>
+          </Animated.View>
+        )}
+
+        { }
         <Animated.View entering={FadeInDown.delay(500).duration(500)} style={styles.settingsContainer}>
           {settings.map((item, index) => (
             <TouchableOpacity
@@ -173,7 +232,7 @@ export default function ProfileScreen() {
           ))}
         </Animated.View>
 
-        {/* Logout */}
+        { }
         <Animated.View entering={FadeInDown.delay(600).duration(500)}>
           <TouchableOpacity style={styles.logoutButton} onPress={logout}>
             <Text style={styles.logoutText}>Logout</Text>
@@ -181,6 +240,7 @@ export default function ProfileScreen() {
         </Animated.View>
       </ScrollView>
     </SafeAreaView>
+    </LinearGradient>
   );
 }
 
@@ -330,7 +390,7 @@ const styles = StyleSheet.create({
   },
 
   logoutButton: {
-    backgroundColor: "#2C0000", // Dark red specifically for dark mode
+    backgroundColor: "#2C0000",
     marginHorizontal: 16,
     paddingVertical: 16,
     borderRadius: 16,
@@ -344,5 +404,52 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#FF3B30",
+  },
+
+  smokerProfileCard: {
+    backgroundColor: LPColors.surfaceLight,
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+
+  smokerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+
+  smokerItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+
+  smokerLabel: {
+    fontSize: 12,
+    color: LPColors.textGray,
+    marginBottom: 4,
+    fontWeight: '500',
+  },
+
+  smokerValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: LPColors.text,
+    textAlign: 'center',
+  },
+
+  smokerDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    marginHorizontal: 16,
+  },
+
+  smokerRowSeparator: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    marginVertical: 16,
   },
 });

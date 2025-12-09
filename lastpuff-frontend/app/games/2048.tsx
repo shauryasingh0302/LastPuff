@@ -44,7 +44,7 @@ export default function Game2048() {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header */}
+            {}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="chevron-back" size={28} color={LPColors.primary} />
@@ -56,12 +56,12 @@ export default function Game2048() {
                 </View>
             </View>
 
-            {/* Instructions */}
+            {}
             <Text style={styles.instructions}>
                 Swipe to move tiles. Combine tiles with the same number to reach 2048!
             </Text>
 
-            {/* Game Grid */}
+            {}
             <View style={styles.gridContainer}>
                 {grid.map((row, rowIndex) => (
                     <View key={rowIndex} style={styles.row}>
@@ -84,7 +84,7 @@ export default function Game2048() {
                 ))}
             </View>
 
-            {/* Controls */}
+            {}
             <View style={styles.controls}>
                 <TouchableOpacity style={styles.newGameButton} onPress={handleNewGame}>
                     <Text style={styles.newGameText}>New Game</Text>
@@ -95,7 +95,7 @@ export default function Game2048() {
                 </Text>
             </View>
 
-            {/* Direction Pad */}
+            {}
             <View style={styles.dpad}>
                 <View style={styles.dpadRow}>
                     <View style={styles.dpadSpacer} />

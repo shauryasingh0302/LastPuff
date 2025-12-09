@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LPColors } from "../constants/theme";
 import { LPHaptics } from "../services/haptics";
@@ -22,25 +24,31 @@ export default function SOSScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <LinearGradient
+      colors={[LPColors.bg, '#000000']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
+    >
+    <SafeAreaView style={[styles.container, { backgroundColor: 'transparent' }]}>
+      <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.header}>
         <TouchableOpacity onPress={() => { LPHaptics.light(); router.back(); }} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={28} color={LPColors.primary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>SOS Mode</Text>
         <View style={{ width: 28 }} />
-      </View>
+      </Animated.View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.heroSection}>
+        <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.heroSection}>
           <View style={styles.iconCircle}>
             <Ionicons name="alert-circle" size={48} color="#FF3B30" />
           </View>
           <Text style={styles.title}>Feeling an urge?</Text>
           <Text style={styles.subtitle}>Take a deep breath. You can get through this.</Text>
-        </View>
+        </Animated.View>
 
-        <View style={styles.actionsGrid}>
+        <Animated.View entering={FadeInDown.delay(300).duration(500)} style={styles.actionsGrid}>
           <TouchableOpacity
             style={styles.actionCard}
             onPress={() => { LPHaptics.medium(); router.push('/games/breathing'); }}
@@ -76,14 +84,15 @@ export default function SOSScreen() {
             <Text style={styles.actionDesc}>Speak to a professional</Text>
             <Ionicons name="arrow-forward" size={20} color={LPColors.textGray} style={styles.arrow} />
           </TouchableOpacity>
-        </View>
+        </Animated.View>
 
-        <View style={styles.quoteCard}>
+        <Animated.View entering={FadeInDown.delay(400).duration(500)} style={styles.quoteCard}>
           <Ionicons name="chatbubble-ellipses" size={24} color={LPColors.primary} style={{ marginBottom: 8 }} />
           <Text style={styles.quoteText}>"{quote}"</Text>
-        </View>
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
+    </LinearGradient>
   );
 }
 

@@ -1,17 +1,17 @@
-// app/(tabs)/explore.tsx
 
-import React, { useEffect, useState, useContext } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, FlatList } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { LPColors } from "../../constants/theme";
-import PostCard from "../../components/PostCard";
-import { fetchFeed, fetchMyPosts, toggleLike, deletePost } from "../../services/posts";
-import { Post } from "../../types/post";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { AuthContext } from "../../context/AuthContext";
-import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
-import { LinearGradient } from 'expo-linear-gradient';
+
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useContext, useEffect, useState } from "react";
+import { RefreshControl, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Animated, { FadeInDown, Layout } from 'react-native-reanimated';
+import { SafeAreaView } from "react-native-safe-area-context";
+import PostCard from "../../components/PostCard";
+import { LPColors } from "../../constants/theme";
+import { AuthContext } from "../../context/AuthContext";
+import { deletePost, fetchFeed, fetchMyPosts, toggleLike } from "../../services/posts";
+import { Post } from "../../types/post";
 
 export default function ExploreScreen() {
   const auth: any = useContext(AuthContext);
@@ -23,11 +23,13 @@ export default function ExploreScreen() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Load posts
-  const loadPosts = async () => {
+  const [refreshing, setRefreshing] = useState(false);
+
+
+  const loadPosts = async (isRefresh = false) => {
     try {
       if (!user?._id) return;
-      setLoading(true);
+      if (!isRefresh) setLoading(true);
 
       if (tab === "all") {
         const res = await fetchFeed();
@@ -43,16 +45,22 @@ export default function ExploreScreen() {
     }
   };
 
-  // Load when tab changes
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadPosts(true);
+    setRefreshing(false);
+  };
+
+
   useEffect(() => {
     loadPosts();
   }, [tab, user]);
 
-  // 🔥 Only refresh ONCE when coming back from comments
+
   useEffect(() => {
     if (params.refresh === "1") {
       loadPosts();
-      // Remove refresh param so it doesn't loop
+
       router.replace("/(tabs)/explore");
     }
   }, [params.refresh]);
@@ -87,8 +95,14 @@ export default function ExploreScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <LinearGradient
+      colors={[LPColors.bg, '#000000']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
+    >
+    <SafeAreaView style={[styles.container, { backgroundColor: 'transparent' }]}>
+      <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.header}>
         <Text style={styles.title}>Community</Text>
 
         <TouchableOpacity onPress={() => router.push("/community/AddPost")}>
@@ -102,10 +116,9 @@ export default function ExploreScreen() {
             <Text style={styles.addButtonText}>Create</Text>
           </LinearGradient>
         </TouchableOpacity>
-      </View>
+      </Animated.View>
 
-      {/* Tabs */}
-      <View style={styles.tabContainer}>
+      <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.tabContainer}>
         <View style={styles.tabsBackground}>
           <TouchableOpacity
             onPress={() => setTab("all")}
@@ -125,9 +138,8 @@ export default function ExploreScreen() {
             </Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </Animated.View>
 
-      {/* Posts */}
       {loading ? (
         <View style={styles.centerContainer}>
           <Text style={styles.loadingText}>Loading community feed...</Text>
@@ -145,9 +157,18 @@ export default function ExploreScreen() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           itemLayoutAnimation={Layout.springify()}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={LPColors.primary}
+              colors={[LPColors.primary]}
+            />
+          }
         />
       )}
     </SafeAreaView>
+    </LinearGradient>
   );
 }
 
@@ -191,7 +212,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   tabActive: {
-    backgroundColor: LPColors.surface, // Brighter card color for active tab
+    backgroundColor: LPColors.surface,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -201,8 +222,9 @@ const styles = StyleSheet.create({
   tabTextActive: { color: LPColors.primary, fontWeight: "700" },
 
   listContent: {
+    flexGrow: 1,
     paddingHorizontal: 16,
-    paddingBottom: 20,
+    paddingBottom: 100,
   },
   centerContainer: {
     flex: 1,

@@ -68,18 +68,18 @@ export default function MemoryGame() {
         const newFlipped = [...flippedCards, cardId];
         setFlippedCards(newFlipped);
 
-        // Flip the card
+
         setCards(prev => prev.map(card =>
             card.id === cardId ? { ...card, isFlipped: true } : card
         ));
 
-        // Check for match when two cards are flipped
+
         if (newFlipped.length === 2) {
             setMoves(moves + 1);
             const [first, second] = newFlipped;
 
             if (cards[first].icon === cards[second].icon) {
-                // Match found
+
                 setTimeout(() => {
                     setCards(prev => prev.map(card =>
                         card.id === first || card.id === second
@@ -90,7 +90,7 @@ export default function MemoryGame() {
                     setFlippedCards([]);
                 }, 500);
             } else {
-                // No match
+
                 setTimeout(() => {
                     setCards(prev => prev.map(card =>
                         card.id === first || card.id === second
@@ -111,7 +111,7 @@ export default function MemoryGame() {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header */}
+            {}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="chevron-back" size={28} color={LPColors.primary} />
@@ -120,12 +120,12 @@ export default function MemoryGame() {
                 <View style={styles.placeholder} />
             </View>
 
-            {/* Instructions */}
+            {}
             <Text style={styles.instructions}>
                 Match all pairs of cards to win!
             </Text>
 
-            {/* Stats */}
+            {}
             <View style={styles.statsRow}>
                 <View style={styles.statBox}>
                     <Ionicons name="time" size={20} color={LPColors.primary} />
@@ -144,7 +144,7 @@ export default function MemoryGame() {
                 </View>
             </View>
 
-            {/* Game Board */}
+            {}
             {isPlaying || matches === 8 ? (
                 <View style={styles.gameBoard}>
                     {cards.map((card) => (
@@ -185,7 +185,7 @@ export default function MemoryGame() {
                 </View>
             )}
 
-            {/* Win Screen */}
+            {}
             {matches === 8 && !isPlaying && (
                 <View style={styles.winOverlay}>
                     <View style={styles.winCard}>
@@ -202,7 +202,7 @@ export default function MemoryGame() {
                 </View>
             )}
 
-            {/* Controls */}
+            {}
             {isPlaying && (
                 <TouchableOpacity style={styles.resetButton} onPress={initializeGame}>
                     <Ionicons name="refresh" size={20} color={LPColors.text} />
@@ -210,7 +210,7 @@ export default function MemoryGame() {
                 </TouchableOpacity>
             )}
 
-            {/* Info */}
+            {}
             <View style={styles.infoCard}>
                 <Ionicons name="information-circle" size={20} color={LPColors.primary} />
                 <Text style={styles.infoText}>

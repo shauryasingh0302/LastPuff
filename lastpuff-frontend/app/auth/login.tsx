@@ -33,10 +33,14 @@ export default function LoginScreen() {
       setError("");
       const res = await API.post<AuthResponse>("/auth/login", { email, password });
       await auth.loginUser(res.data.user, res.data.token);
-      router.replace("/(tabs)");
+      if (res.data.user.isSmoker === false) {
+        router.replace("/fitness");
+      } else {
+        router.replace("/(tabs)");
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || "Login failed - Check your connection");
-      // For demo purposes if fails, we might want a bypass, but sticking to strict for now
+
     } finally {
       setLoading(false);
     }

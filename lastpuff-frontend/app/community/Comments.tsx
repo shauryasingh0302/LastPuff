@@ -1,4 +1,4 @@
-// app/community/Comments.tsx
+
 
 import React, { useEffect, useState, useContext } from "react";
 import {
@@ -59,7 +59,7 @@ export default function CommentsScreen() {
   };
 
   const closeModal = () => {
-    // Tell explore to refresh comment counts
+
     router.replace({ pathname: "/(tabs)/explore", params: { refresh: "1" } });
 
     setVisible(false);

@@ -6,7 +6,7 @@ async function testV1() {
   console.log("Testing with v1 endpoint (not v1beta)...");
   console.log("API Key:", apiKey);
   
-  // Try v1 instead of v1beta
+
   const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
   
   console.log("\nURL:", url.replace(apiKey, "API_KEY"));
@@ -31,7 +31,7 @@ async function testV1() {
     console.log("Error:", e.message);
   }
   
-  // Also try listing models
+
   console.log("\n\n--- Listing available models ---");
   const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`;
   

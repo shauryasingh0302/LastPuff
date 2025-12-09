@@ -1,4 +1,3 @@
-// lastpuff-backend/express-app/controllers/AuthController.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
@@ -16,9 +15,9 @@ const sanitizeUser = (user) => {
 
 export const signup = async (req, res) => {
   try {
-    const { name, email, password, age, height, weight, plan, isSmoker } = req.body;
+    const { name, email, password, age, height, weight, plan, isSmoker, smokingData, healthData } = req.body;
 
-    // Basic validation
+
     if (!name || !email || !password) {
       return res.status(400).json({ message: "Name, email and password are required" });
     }
@@ -43,6 +42,8 @@ export const signup = async (req, res) => {
       weightKg: weight ? Number(weight) : undefined,
       plan: plan === "aggressive" ? "aggressive" : plan === "gradual" ? "gradual" : "none",
       isSmoker: isSmoker === true || isSmoker === "true",
+      smokingData,
+      healthData
     });
 
     const token = createToken(user._id);

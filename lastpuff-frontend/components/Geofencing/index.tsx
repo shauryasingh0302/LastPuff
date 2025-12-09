@@ -8,13 +8,14 @@ import {
     FlatList,
     Keyboard,
     Modal,
+    RefreshControl,
     ScrollView,
     StyleSheet,
     Switch,
     Text,
     TextInput,
     TouchableOpacity,
-    View
+    View,
 } from 'react-native';
 import MapView, { Circle, Marker, Region } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -38,7 +39,7 @@ import {
 const { width, height } = Dimensions.get('window');
 
 export default function GeofencingNative() {
-    // Get user from AuthContext to determine if smoker or non-smoker
+
     const { user } = useContext(AuthContext);
     const isSmoker = user?.isSmoker ?? false;
 
@@ -48,17 +49,17 @@ export default function GeofencingNative() {
     const [showAddModal, setShowAddModal] = useState(false);
     const [selectedLocation, setSelectedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
-    // Idle detection state (for both smokers and non-smokers)
+
     const [isIdleDetectionOn, setIsIdleDetectionOn] = useState(false);
 
-    // New zone form state
+
     const [newZoneName, setNewZoneName] = useState('');
     const [newZoneType, setNewZoneType] = useState<'trigger' | 'safe'>('trigger');
     const [newZoneRadius, setNewZoneRadius] = useState('100');
     const [notifyOnEnter, setNotifyOnEnter] = useState(true);
     const [notifyOnExit, setNotifyOnExit] = useState(true);
 
-    // Search state
+
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<Location.LocationGeocodedAddress[]>([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -67,13 +68,20 @@ export default function GeofencingNative() {
 
     const mapRef = useRef<MapView>(null);
     const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [refreshing, setRefreshing] = useState(false);
+
+    const onRefresh = React.useCallback(async () => {
+        setRefreshing(true);
+        await initializeGeofencing();
+        setRefreshing(false);
+    }, []);
 
     useEffect(() => {
         initializeGeofencing();
     }, []);
 
     const initializeGeofencing = async () => {
-        // Request permissions
+
         const hasPermissions = await requestPermissions();
         if (!hasPermissions) {
             Alert.alert(
@@ -84,23 +92,23 @@ export default function GeofencingNative() {
             return;
         }
 
-        // Get current location
+
         const location = await getCurrentLocation();
         setCurrentLocation(location);
 
-        // Load saved zones (only for smokers)
+
         const savedZones = await getGeofenceZones();
         setZones(savedZones);
 
-        // Check if geofencing is active
+
         const active = await isGeofencingActive();
         setIsActive(active);
 
-        // Check if idle detection is active
+
         const idleActive = await isIdleDetectionActive();
         setIsIdleDetectionOn(idleActive);
 
-        // If zones exist and not active, start geofencing (for smokers)
+
         if (savedZones.length > 0 && !active) {
             await startGeofencing();
             setIsActive(true);
@@ -192,7 +200,7 @@ export default function GeofencingNative() {
         }
     };
 
-    // Toggle idle detection (sedentary alert)
+
     const toggleIdleDetection = async () => {
         try {
             if (isIdleDetectionOn) {
@@ -231,7 +239,7 @@ export default function GeofencingNative() {
         }
     };
 
-    // Search for locations using geocoding
+
     const searchLocation = async (query: string) => {
         if (query.trim().length < 3) {
             setSearchResults([]);
@@ -241,11 +249,11 @@ export default function GeofencingNative() {
 
         setIsSearching(true);
         try {
-            // Use expo-location geocoding
+
             const results = await Location.geocodeAsync(query);
 
             if (results.length > 0) {
-                // Get address details for each result
+
                 const addressPromises = results.slice(0, 5).map(async (result) => {
                     const addresses = await Location.reverseGeocodeAsync({
                         latitude: result.latitude,
@@ -273,27 +281,27 @@ export default function GeofencingNative() {
         }
     };
 
-    // Handle search input change with debounce
+
     const handleSearchChange = (text: string) => {
         setSearchQuery(text);
 
-        // Clear previous timeout
+
         if (searchTimeoutRef.current) {
             clearTimeout(searchTimeoutRef.current);
         }
 
-        // Debounce search
+
         searchTimeoutRef.current = setTimeout(() => {
             searchLocation(text);
         }, 500);
     };
 
-    // Handle selecting a search result
+
     const handleSelectSearchResult = (result: any) => {
         Keyboard.dismiss();
         setShowSearchResults(false);
 
-        // Format address for zone name
+
         const addressParts = [];
         if (result.name) addressParts.push(result.name);
         if (result.street) addressParts.push(result.street);
@@ -306,7 +314,7 @@ export default function GeofencingNative() {
         setSelectedSearchResult(formattedAddress);
         setNewZoneName(formattedAddress);
 
-        // Navigate to the location
+
         const coordinate = {
             latitude: result.latitude,
             longitude: result.longitude,
@@ -323,15 +331,15 @@ export default function GeofencingNative() {
             });
         }
 
-        // Clear search
+
         setSearchQuery('');
         setSearchResults([]);
 
-        // Open add modal
+
         setShowAddModal(true);
     };
 
-    // Clear search
+
     const clearSearch = () => {
         setSearchQuery('');
         setSearchResults([]);
@@ -339,7 +347,7 @@ export default function GeofencingNative() {
         Keyboard.dismiss();
     };
 
-    // Format address for display
+
     const formatSearchResult = (result: any) => {
         const parts = [];
         if (result.name) parts.push(result.name);
@@ -366,13 +374,13 @@ export default function GeofencingNative() {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header */}
+            {}
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>
                     {isSmoker ? 'Geofencing' : 'Activity Monitor'}
                 </Text>
                 <View style={styles.headerRight}>
-                    {/* Idle Detection Toggle (for everyone) */}
+                    {}
                     <TouchableOpacity onPress={toggleIdleDetection} style={styles.toggleButton}>
                         <Ionicons
                             name={isIdleDetectionOn ? 'fitness' : 'fitness-outline'}
@@ -380,7 +388,7 @@ export default function GeofencingNative() {
                             color={isIdleDetectionOn ? LPColors.primary : LPColors.textGray}
                         />
                     </TouchableOpacity>
-                    {/* Geofencing Toggle (only for smokers) */}
+                    {}
                     {isSmoker && (
                         <TouchableOpacity onPress={toggleGeofencing} style={styles.toggleButton}>
                             <Ionicons
@@ -393,7 +401,7 @@ export default function GeofencingNative() {
                 </View>
             </View>
 
-            {/* Idle Detection Status Bar (for everyone) */}
+            {}
             <View style={[styles.statusBar, isIdleDetectionOn ? styles.statusActive : styles.statusInactive]}>
                 <Ionicons
                     name={isIdleDetectionOn ? 'fitness' : 'body-outline'}
@@ -406,7 +414,7 @@ export default function GeofencingNative() {
                 <Text style={styles.zoneCount}>Daytime only</Text>
             </View>
 
-            {/* Geofencing Status Bar (only for smokers) */}
+            {}
             {isSmoker && (
                 <View style={[styles.statusBar, isActive ? styles.statusActive : styles.statusInactive, { marginTop: 4 }]}>
                     <Ionicons
@@ -421,7 +429,7 @@ export default function GeofencingNative() {
                 </View>
             )}
 
-            {/* Search Bar (only for smokers) */}
+            {}
             {isSmoker && (
                 <View style={styles.searchContainer}>
                     <View style={styles.searchInputContainer}>
@@ -445,7 +453,7 @@ export default function GeofencingNative() {
                         )}
                     </View>
 
-                    {/* Search Results Dropdown */}
+                    {}
                     {showSearchResults && (
                         <View style={styles.searchResultsContainer}>
                             {searchResults.length === 0 ? (
@@ -484,7 +492,7 @@ export default function GeofencingNative() {
                 </View>
             )}
 
-            {/* Map (only for smokers) */}
+            {}
             {isSmoker ? (
                 <View style={styles.mapContainer}>
                     <MapView
@@ -496,7 +504,7 @@ export default function GeofencingNative() {
                         showsMyLocationButton={false}
                         customMapStyle={darkMapStyle}
                     >
-                        {/* Render geofence zones */}
+                        {}
                         {zones.map((zone) => (
                             <React.Fragment key={zone.id}>
                                 <Circle
@@ -523,19 +531,19 @@ export default function GeofencingNative() {
                             </React.Fragment>
                         ))}
 
-                        {/* Show selected location marker */}
+                        {}
                         {selectedLocation && (
                             <Marker coordinate={selectedLocation} pinColor={LPColors.primary} />
                         )}
                     </MapView>
 
-                    {/* Map Controls */}
+                    {}
                     <TouchableOpacity style={styles.locationButton} onPress={centerOnLocation}>
                         <Ionicons name="locate" size={24} color={LPColors.text} />
                     </TouchableOpacity>
                 </View>
             ) : (
-                /* Non-smoker Activity Monitor Content */
+                
                 <View style={styles.nonSmokerContent}>
                     <View style={styles.activityInfoCard}>
                         <Ionicons name="fitness" size={64} color={LPColors.primary} />
@@ -574,10 +582,10 @@ export default function GeofencingNative() {
                 </View>
             )}
 
-            {/* Instructions, Zone List, and Modal (only for smokers) */}
+            {}
             {isSmoker && (
                 <>
-                    {/* Instructions */}
+                    {}
                     <View style={styles.instructions}>
                         <Ionicons name="information-circle" size={20} color={LPColors.textGray} />
                         <Text style={styles.instructionsText}>
@@ -585,8 +593,19 @@ export default function GeofencingNative() {
                         </Text>
                     </View>
 
-                    {/* Zone List */}
-                    <ScrollView style={styles.zoneList} contentContainerStyle={styles.zoneListContent}>
+                    {}
+                    <ScrollView
+                        style={styles.zoneList}
+                        contentContainerStyle={styles.zoneListContent}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={onRefresh}
+                                tintColor={LPColors.primary}
+                                colors={[LPColors.primary]}
+                            />
+                        }
+                    >
                         {zones.length === 0 ? (
                             <View style={styles.emptyState}>
                                 <Ionicons name="map-outline" size={48} color="#444" />
@@ -626,7 +645,7 @@ export default function GeofencingNative() {
                         )}
                     </ScrollView>
 
-                    {/* Add Zone Modal */}
+                    {}
                     <Modal
                         visible={showAddModal}
                         animationType="slide"
@@ -651,7 +670,7 @@ export default function GeofencingNative() {
                                 </View>
 
                                 <ScrollView style={styles.modalForm}>
-                                    {/* Zone Name */}
+                                    {}
                                     <Text style={styles.label}>Zone Name</Text>
                                     <TextInput
                                         style={styles.input}
@@ -661,7 +680,7 @@ export default function GeofencingNative() {
                                         placeholderTextColor="#666"
                                     />
 
-                                    {/* Zone Type */}
+                                    {}
                                     <Text style={styles.label}>Zone Type</Text>
                                     <View style={styles.typeSelector}>
                                         <TouchableOpacity
@@ -686,7 +705,7 @@ export default function GeofencingNative() {
                                         </TouchableOpacity>
                                     </View>
 
-                                    {/* Radius */}
+                                    {}
                                     <Text style={styles.label}>Radius (meters)</Text>
                                     <TextInput
                                         style={styles.input}
@@ -697,7 +716,7 @@ export default function GeofencingNative() {
                                         keyboardType="numeric"
                                     />
 
-                                    {/* Notifications */}
+                                    {}
                                     <Text style={styles.label}>Notifications</Text>
                                     <View style={styles.switchRow}>
                                         <Text style={styles.switchLabel}>Notify on Enter</Text>
@@ -718,7 +737,7 @@ export default function GeofencingNative() {
                                         />
                                     </View>
 
-                                    {/* Add Button */}
+                                    {}
                                     <TouchableOpacity style={styles.addButton} onPress={handleAddZone}>
                                         <Text style={styles.addButtonText}>Add Zone</Text>
                                     </TouchableOpacity>
@@ -860,7 +879,7 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: LPColors.textGray,
     },
-    // Search styles
+
     searchContainer: {
         paddingHorizontal: 16,
         paddingVertical: 8,
@@ -1005,7 +1024,9 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     zoneListContent: {
+        flexGrow: 1,
         padding: 20,
+        paddingBottom: 100,
     },
     emptyState: {
         alignItems: 'center',
@@ -1167,7 +1188,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#000',
     },
-    // Non-smoker Activity Monitor styles
+
     nonSmokerContent: {
         flex: 1,
         padding: 20,

@@ -1,4 +1,5 @@
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React, { useContext, useEffect } from 'react';
@@ -7,13 +8,14 @@ import 'react-native-reanimated';
 import FloatingChatButton from '../components/FloatingChatButton';
 import { AuthContext, AuthProvider } from '../context/AuthContext';
 import { GoalsProvider } from '../context/GoalsContext';
+import { StepsProvider } from '../context/StepsContext';
 
-// Import geofencing service to register background task at app startup
+
 import '../services/geofencing';
 
 import { LPColors } from '../constants/theme';
 
-// Custom dark theme for LastPuff
+
 const LastPuffTheme = {
   ...DarkTheme,
   colors: {
@@ -28,29 +30,43 @@ const LastPuffTheme = {
 };
 
 function ProtectedNavigation() {
-  const { token, loading } = useContext(AuthContext);
+  const { token, loading, user } = useContext(AuthContext);
   const segments = useSegments();
   const router = useRouter();
 
-  // 🔐 Redirect logic based on auth state
+
   useEffect(() => {
-    if (loading) return; // wait until AsyncStorage loaded
+    if (loading) return;
 
     const inAuthGroup = segments[0] === 'auth';
     const inOnboarding = segments[0] === 'onboarding';
 
     if (!token && !inAuthGroup && !inOnboarding) {
-      // Not logged in and not in auth/onboarding screens → force to login
+
       router.replace('/auth/login');
     } else if (token && inAuthGroup && segments[1] !== 'signup') {
-      // Logged in but on auth screen (but NOT signup) → send to app
-      // We exclude signup because it handles its own redirect to onboarding
-      router.replace('/(tabs)');
-    }
-    // Allow onboarding screens for both logged-in users and during signup flow
-  }, [loading, token, segments]);
 
-  // 🌓 While loading from storage, don't show tabs or login yet
+
+
+
+      if (user?.isSmoker === false) {
+        router.replace('/fitness');
+      } else {
+        router.replace('/(tabs)');
+      }
+    } else if (token && inOnboarding && user) {
+
+
+      if (user?.isSmoker === false) {
+        router.replace('/fitness');
+      } else {
+        router.replace('/(tabs)');
+      }
+    }
+
+  }, [loading, token, segments, user]);
+
+
   if (loading) {
     return (
       <View
@@ -67,20 +83,23 @@ function ProtectedNavigation() {
     );
   }
 
-  // Normal navigation stack
+
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      {/* Auth screens */}
+      {}
       <Stack.Screen name="auth/login" />
       <Stack.Screen name="auth/signup" />
 
-      {/* Onboarding */}
+      {}
       <Stack.Screen name="onboarding/questionnaire" />
 
-      {/* Main app */}
+      {}
       <Stack.Screen name="(tabs)" />
 
-      {/* AI Coach */}
+      {}
+      <Stack.Screen name="fitness" />
+
+      {}
       <Stack.Screen
         name="ai-coach"
         options={{
@@ -89,23 +108,42 @@ function ProtectedNavigation() {
         }}
       />
 
-      {/* Optional modal */}
+      {}
       <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    'SamsungSans-Regular': require('../assets/fonts/SamsungSans-Regular.ttf'),
+    'SamsungSans-Bold': require('../assets/fonts/SamsungSans-Bold.ttf'),
+    'SamsungSans-Medium': require('../assets/fonts/SamsungSans-Medium.ttf'),
+    'SamsungSans-Light': require('../assets/fonts/SamsungSans-Light.ttf'),
+    'SamsungSans-Thin': require('../assets/fonts/SamsungSans-Thin.ttf'),
+  });
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, backgroundColor: LPColors.bg, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={LPColors.primary} />
+        <Text style={{ color: LPColors.text, marginTop: 12 }}>Loading fonts...</Text>
+      </View>
+    );
+  }
+
   return (
     <AuthProvider>
       <GoalsProvider>
-        <ThemeProvider value={LastPuffTheme}>
-          <View style={styles.container}>
-            <ProtectedNavigation />
-            <FloatingChatButton />
-          </View>
-          <StatusBar style="light" />
-        </ThemeProvider>
+        <StepsProvider>
+          <ThemeProvider value={LastPuffTheme}>
+            <View style={styles.container}>
+              <ProtectedNavigation />
+              <FloatingChatButton />
+            </View>
+            <StatusBar style="light" />
+          </ThemeProvider>
+        </StepsProvider>
       </GoalsProvider>
     </AuthProvider>
   );

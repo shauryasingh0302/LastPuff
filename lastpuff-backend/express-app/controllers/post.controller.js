@@ -1,13 +1,11 @@
-// controllers/post.controller.js
+
 import { Post } from "../models/post.model.js";
 import { Comment } from "../models/comment.model.js";
 import { uploadToCloudinary } from "../utils/cloudinary.js";
 import cloudinary from "../config/cloudinary.js";
 import mongoose from "mongoose";
 
-/**
- * Create a post (text optional, images optional)
- */
+
 export const createPost = async (req, res) => {
   try {
     const rawContent = req.body.content;
@@ -55,9 +53,7 @@ export const createPost = async (req, res) => {
   }
 };
 
-/**
- * Get feed (paginated) + add isLiked flag
- */
+
 export const getFeed = async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page || "1", 10));
@@ -92,9 +88,7 @@ export const getFeed = async (req, res) => {
   }
 };
 
-/**
- * Get single post (with isLiked)
- */
+
 export const getPostById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -130,9 +124,7 @@ export const getPostById = async (req, res) => {
   }
 };
 
-/**
- * Get posts for a specific user (with isLiked)
- */
+
 export const getUserPosts = async (req, res) => {
   try {
     const userId = req.params.userId;
@@ -166,9 +158,7 @@ export const getUserPosts = async (req, res) => {
   }
 };
 
-/**
- * Toggle like / unlike
- */
+
 export const toggleLike = async (req, res) => {
   try {
     const postId = req.params.id;
@@ -219,9 +209,7 @@ export const toggleLike = async (req, res) => {
   }
 };
 
-/**
- * Delete Post (only author) + remove Cloudinary images + remove comments
- */
+
 export const deletePost = async (req, res) => {
   try {
     const postId = req.params.id;
@@ -248,7 +236,7 @@ export const deletePost = async (req, res) => {
       });
     }
 
-    // Delete Cloudinary images
+
     if (post.images && post.images.length) {
       for (const img of post.images) {
         try {
@@ -261,7 +249,7 @@ export const deletePost = async (req, res) => {
       }
     }
 
-    // Delete comments + post (hard delete)
+
     await Comment.deleteMany({ post: post._id });
     await Post.deleteOne({ _id: post._id });
 

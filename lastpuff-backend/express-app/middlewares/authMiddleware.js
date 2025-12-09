@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 
-export const authMiddleware = (req, res, next) => {
-  console.log("AUTH HEADER:", req.headers.authorization);
+export const protect = (req, res, next) => {
+  // console.log("AUTH HEADER:", req.headers.authorization);
 
   try {
     const authHeader = req.headers.authorization || "";
@@ -12,14 +12,14 @@ export const authMiddleware = (req, res, next) => {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // IMPORTANT → your JWT payload is: { id: userId }
+
     const userId = decoded.id;
     if (!userId) {
       return res.status(401).json({ success: false, message: "Invalid token payload" });
     }
 
-    // Controllers expect req.user._id
-    req.user = { _id: userId };
+
+    req.user = { id: userId, _id: userId };
 
     next();
   } catch (err) {
@@ -27,3 +27,5 @@ export const authMiddleware = (req, res, next) => {
     return res.status(401).json({ success: false, message: "Invalid or expired token" });
   }
 };
+
+export const authMiddleware = protect;

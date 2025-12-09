@@ -15,6 +15,7 @@
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Allow LastPuff to use your location to send alerts when you enter or exit trigger zones.",
         "NSLocationAlwaysUsageDescription": "Allow LastPuff to use your location in the background for geofencing alerts.",
         "NSLocationWhenInUseUsageDescription": "Allow LastPuff to use your location to show your position on the map.",
+        "NSHealthShareUsageDescription": "Allow LastPuff to read your step count from Apple Health to track your Dandi March progress.",
         "UIBackgroundModes": [
           "location",
           "fetch",
@@ -38,7 +39,8 @@
         "android.permission.ACCESS_BACKGROUND_LOCATION",
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_LOCATION",
-        "android.permission.RECEIVE_BOOT_COMPLETED"
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.ACTIVITY_RECOGNITION"
       ]
     },
     "web": {
@@ -77,7 +79,8 @@
           "sounds": [],
           "mode": "production"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -12,9 +12,7 @@ import {
 } from '../services/geofencing';
 import * as Location from 'expo-location';
 
-/**
- * Custom hook for managing geofencing functionality
- */
+
 export function useGeofencing() {
     const [zones, setZones] = useState<GeofenceZone[]>([]);
     const [isActive, setIsActive] = useState(false);
@@ -22,7 +20,7 @@ export function useGeofencing() {
     const [hasPermissions, setHasPermissions] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    // Initialize geofencing on mount
+
     useEffect(() => {
         initialize();
     }, []);
@@ -31,7 +29,7 @@ export function useGeofencing() {
         try {
             setLoading(true);
 
-            // Check permissions
+
             const permissions = await requestPermissions();
             setHasPermissions(permissions);
 
@@ -40,19 +38,19 @@ export function useGeofencing() {
                 return;
             }
 
-            // Get current location
+
             const location = await getCurrentLocation();
             setCurrentLocation(location);
 
-            // Load zones
+
             const savedZones = await getGeofenceZones();
             setZones(savedZones);
 
-            // Check if active
+
             const active = await isGeofencingActive();
             setIsActive(active);
 
-            // Auto-start if zones exist but not active
+
             if (savedZones.length > 0 && !active) {
                 await startGeofencing();
                 setIsActive(true);
@@ -78,7 +76,7 @@ export function useGeofencing() {
             await addGeofenceZone(zone);
             await refreshZones();
 
-            // Auto-start geofencing if not active
+
             if (!isActive) {
                 await startGeofencing();
                 setIsActive(true);
@@ -140,14 +138,14 @@ export function useGeofencing() {
     }, []);
 
     return {
-        // State
+
         zones,
         isActive,
         currentLocation,
         hasPermissions,
         loading,
 
-        // Actions
+
         addZone,
         removeZone,
         toggleGeofencing,

@@ -4,9 +4,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    Animated,
     KeyboardAvoidingView,
     Platform,
+    Animated as RNAnimated,
     ScrollView,
     StyleSheet,
     Text,
@@ -14,6 +14,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LPColors } from '../constants/theme';
 import { chatWithAICoach } from '../services/api';
@@ -26,17 +27,17 @@ interface Message {
 }
 
 const COACH_PROMPTS = [
-    "I'm having a strong craving",
-    "Tips to stay motivated?",
-    "What should I do right now?",
-    "How do I handle stress?",
+    "I'm feeling unmotivated today",
+    "Tips to stay consistent?",
+    "How to overcome workout anxiety?",
+    "Dealing with stress and burnout",
 ];
 
 export default function AICoachScreen() {
     const [messages, setMessages] = useState<Message[]>([
         {
             id: '1',
-            text: `Hey! I'm your AI-powered personal fitness trainer. I'll guide you with customized workouts, nutrition tips, and daily motivation to keep you on track. Tell me—how are you feeling today and what's your fitness goal right now?`,
+            text: `Hey! I'm your AI-powered personal fitness trainer and mental wellness coach. I'll guide you with customized workouts, nutrition tips, and daily motivation—while also supporting your mental health with stress management, mindfulness techniques, and emotional support. Tell me, how are you feeling today? What's on your mind or what's your current goal?`,
             sender: 'ai',
             timestamp: new Date(),
         },
@@ -63,13 +64,13 @@ export default function AICoachScreen() {
         setInputText('');
         setIsLoading(true);
 
-        // Scroll to bottom
+
         setTimeout(() => {
             scrollViewRef.current?.scrollToEnd({ animated: true });
         }, 100);
 
         try {
-            // Call Gemini AI API through backend
+
             const chatHistory = updatedMessages.map(msg => ({
                 text: msg.text,
                 sender: msg.sender,
@@ -106,9 +107,17 @@ export default function AICoachScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
+        <LinearGradient
+            colors={[LPColors.bg, '#000000']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ flex: 1 }}
+        >
+        <SafeAreaView style={[styles.container, { backgroundColor: 'transparent' }]}>
+            <Animated.View 
+                entering={FadeInDown.delay(100).duration(500)}
+                style={styles.header}
+            >
                 <TouchableOpacity
                     onPress={() => {
                         if (router.canGoBack()) {
@@ -139,9 +148,8 @@ export default function AICoachScreen() {
                 <TouchableOpacity style={styles.infoButton}>
                     <Ionicons name="information-circle-outline" size={24} color={LPColors.textGray} />
                 </TouchableOpacity>
-            </View>
+            </Animated.View>
 
-            {/* Chat Messages */}
             <ScrollView
                 ref={scrollViewRef}
                 style={styles.messagesContainer}
@@ -163,7 +171,7 @@ export default function AICoachScreen() {
                 <View style={{ height: 20 }} />
             </ScrollView>
 
-            {/* Quick Prompts */}
+            {}
             {messages.length <= 2 && (
                 <View style={styles.promptsWrapper}>
                     <ScrollView
@@ -184,12 +192,12 @@ export default function AICoachScreen() {
                 </View>
             )}
 
-            {/* Input Area */}
+            {}
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
             >
-                <View style={styles.inputContainer}>
+                <Animated.View style={styles.inputContainer}>
                     <View style={styles.inputWrapper}>
                         <TextInput
                             style={styles.textInput}
@@ -217,18 +225,19 @@ export default function AICoachScreen() {
                             </LinearGradient>
                         </TouchableOpacity>
                     </View>
-                </View>
+                </Animated.View>
             </KeyboardAvoidingView>
         </SafeAreaView>
+        </LinearGradient>
     );
 }
 
 function MessageBubble({ message }: { message: Message }) {
     const isUser = message.sender === 'user';
-    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const fadeAnim = useRef(new RNAnimated.Value(0)).current;
 
     useEffect(() => {
-        Animated.timing(fadeAnim, {
+        RNAnimated.timing(fadeAnim, {
             toValue: 1,
             duration: 300,
             useNativeDriver: true,
@@ -236,7 +245,7 @@ function MessageBubble({ message }: { message: Message }) {
     }, []);
 
     return (
-        <Animated.View
+        <RNAnimated.View
             style={[
                 styles.messageWrapper,
                 isUser ? styles.userMessageWrapper : styles.aiMessageWrapper,
@@ -253,7 +262,7 @@ function MessageBubble({ message }: { message: Message }) {
                     {message.text}
                 </Text>
             </View>
-        </Animated.View>
+        </RNAnimated.View>
     );
 }
 

@@ -17,7 +17,7 @@ export default function BreathingExercise() {
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const opacityAnim = useRef(new Animated.Value(0.3)).current;
 
-    // Phase durations in seconds
+
     const phaseDurations = {
         inhale: 4,
         hold: 4,
@@ -131,7 +131,7 @@ export default function BreathingExercise() {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header */}
+            {}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="chevron-back" size={28} color={LPColors.primary} />
@@ -140,12 +140,12 @@ export default function BreathingExercise() {
                 <View style={styles.placeholder} />
             </View>
 
-            {/* Instructions */}
+            {}
             <Text style={styles.instructions}>
                 Follow the breathing pattern to relax and reduce cravings
             </Text>
 
-            {/* Stats */}
+            {}
             <View style={styles.statsRow}>
                 <View style={styles.statBox}>
                     <Ionicons name="time" size={20} color={LPColors.primary} />
@@ -159,7 +159,7 @@ export default function BreathingExercise() {
                 </View>
             </View>
 
-            {/* Breathing Circle */}
+            {}
             <View style={styles.breathingArea}>
                 <Animated.View
                     style={[
@@ -181,7 +181,7 @@ export default function BreathingExercise() {
                 </View>
             </View>
 
-            {/* Pattern Info */}
+            {}
             <View style={styles.patternCard}>
                 <Text style={styles.patternTitle}>4-4-4-2 Pattern</Text>
                 <View style={styles.patternSteps}>
@@ -204,7 +204,7 @@ export default function BreathingExercise() {
                 </View>
             </View>
 
-            {/* Controls */}
+            {}
             <View style={styles.controls}>
                 {!isActive ? (
                     <TouchableOpacity style={styles.startButton} onPress={handleStart}>
@@ -219,7 +219,7 @@ export default function BreathingExercise() {
                 )}
             </View>
 
-            {/* Info */}
+            {}
             <View style={styles.infoCard}>
                 <Ionicons name="heart" size={20} color={LPColors.primary} />
                 <Text style={styles.infoText}>

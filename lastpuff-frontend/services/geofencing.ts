@@ -3,24 +3,24 @@ import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
 import * as TaskManager from 'expo-task-manager';
 
-// Task name for background geofencing
+
 const GEOFENCING_TASK = 'GEOFENCING_TASK';
 
-// Storage keys
+
 const GEOFENCE_ZONES_KEY = '@geofence_zones';
 
 export interface GeofenceZone {
     id: string;
     latitude: number;
     longitude: number;
-    radius: number; // in meters
+    radius: number;
     name: string;
-    type: 'trigger' | 'safe'; // trigger = high-risk, safe = smoke-free
+    type: 'trigger' | 'safe';
     notifyOnEnter: boolean;
     notifyOnExit: boolean;
 }
 
-// Configure notification handler
+
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
         shouldShowAlert: true,
@@ -31,7 +31,7 @@ Notifications.setNotificationHandler({
     }),
 });
 
-// Define the geofencing task
+
 TaskManager.defineTask(GEOFENCING_TASK, async ({ data, error }) => {
     if (error) {
         console.error('Geofencing task error:', error);
@@ -45,7 +45,7 @@ TaskManager.defineTask(GEOFENCING_TASK, async ({ data, error }) => {
 
         if (!zone) return;
 
-        // Send notification based on event type
+
         if (eventType === Location.GeofencingEventType.Enter && zone.notifyOnEnter) {
             await sendGeofenceNotification(zone, 'enter');
         } else if (eventType === Location.GeofencingEventType.Exit && zone.notifyOnExit) {
@@ -54,12 +54,10 @@ TaskManager.defineTask(GEOFENCING_TASK, async ({ data, error }) => {
     }
 });
 
-/**
- * Request location and notification permissions
- */
+
 export async function requestPermissions(): Promise<boolean> {
     try {
-        // Request location permissions
+
         const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
         if (foregroundStatus !== 'granted') {
             console.log('Foreground location permission denied');
@@ -72,7 +70,7 @@ export async function requestPermissions(): Promise<boolean> {
             return false;
         }
 
-        // Request notification permissions
+
         const { status: notificationStatus } = await Notifications.requestPermissionsAsync();
         if (notificationStatus !== 'granted') {
             console.log('Notification permission denied');
@@ -86,9 +84,7 @@ export async function requestPermissions(): Promise<boolean> {
     }
 }
 
-/**
- * Get all saved geofence zones
- */
+
 export async function getGeofenceZones(): Promise<GeofenceZone[]> {
     try {
         const zonesJson = await AsyncStorage.getItem(GEOFENCE_ZONES_KEY);
@@ -99,9 +95,7 @@ export async function getGeofenceZones(): Promise<GeofenceZone[]> {
     }
 }
 
-/**
- * Save geofence zones
- */
+
 export async function saveGeofenceZones(zones: GeofenceZone[]): Promise<void> {
     try {
         await AsyncStorage.setItem(GEOFENCE_ZONES_KEY, JSON.stringify(zones));
@@ -110,42 +104,36 @@ export async function saveGeofenceZones(zones: GeofenceZone[]): Promise<void> {
     }
 }
 
-/**
- * Add a new geofence zone
- */
+
 export async function addGeofenceZone(zone: GeofenceZone): Promise<void> {
     try {
         const zones = await getGeofenceZones();
         zones.push(zone);
         await saveGeofenceZones(zones);
-        await startGeofencing(); // Restart geofencing with new zone
+        await startGeofencing();
     } catch (error) {
         console.error('Error adding geofence zone:', error);
         throw error;
     }
 }
 
-/**
- * Remove a geofence zone
- */
+
 export async function removeGeofenceZone(zoneId: string): Promise<void> {
     try {
         const zones = await getGeofenceZones();
         const filteredZones = zones.filter(z => z.id !== zoneId);
         await saveGeofenceZones(filteredZones);
-        await startGeofencing(); // Restart geofencing without removed zone
+        await startGeofencing();
     } catch (error) {
         console.error('Error removing geofence zone:', error);
         throw error;
     }
 }
 
-/**
- * Start geofencing monitoring
- */
+
 export async function startGeofencing(): Promise<void> {
     try {
-        // Check if task is registered and stop it first
+
         const isRegistered = await TaskManager.isTaskRegisteredAsync(GEOFENCING_TASK);
         if (isRegistered) {
             console.log('Stopping existing geofencing task...');
@@ -162,7 +150,7 @@ export async function startGeofencing(): Promise<void> {
             return;
         }
 
-        // Convert zones to geofencing regions
+
         const regions = zones.map(zone => ({
             identifier: zone.id,
             latitude: zone.latitude,
@@ -174,7 +162,7 @@ export async function startGeofencing(): Promise<void> {
 
         console.log('Starting geofencing with regions:', regions.map(r => ({ id: r.identifier, lat: r.latitude, lng: r.longitude, radius: r.radius })));
 
-        // Start geofencing
+
         await Location.startGeofencingAsync(GEOFENCING_TASK, regions);
         console.log('Geofencing started successfully for', regions.length, 'zones');
     } catch (error) {
@@ -183,9 +171,7 @@ export async function startGeofencing(): Promise<void> {
     }
 }
 
-/**
- * Stop geofencing monitoring
- */
+
 export async function stopGeofencing(): Promise<void> {
     try {
         const isTaskDefined = await TaskManager.isTaskDefined(GEOFENCING_TASK);
@@ -198,9 +184,7 @@ export async function stopGeofencing(): Promise<void> {
     }
 }
 
-/**
- * Send a geofence notification
- */
+
 async function sendGeofenceNotification(zone: GeofenceZone, eventType: 'enter' | 'exit'): Promise<void> {
     try {
         let title = '';
@@ -215,7 +199,7 @@ async function sendGeofenceNotification(zone: GeofenceZone, eventType: 'enter' |
                 body = `You've left "${zone.name}". Great job avoiding temptation!`;
             }
         } else {
-            // safe zone
+
             if (eventType === 'enter') {
                 title = 'Safe Zone';
                 body = `Welcome to "${zone.name}" - a smoke-free zone. You've got this!`;
@@ -232,16 +216,14 @@ async function sendGeofenceNotification(zone: GeofenceZone, eventType: 'enter' |
                 sound: true,
                 priority: Notifications.AndroidNotificationPriority.HIGH,
             },
-            trigger: null, // Send immediately
+            trigger: null,
         });
     } catch (error) {
         console.error('Error sending notification:', error);
     }
 }
 
-/**
- * Get current location
- */
+
 export async function getCurrentLocation(): Promise<Location.LocationObject | null> {
     try {
         const { status } = await Location.requestForegroundPermissionsAsync();
@@ -260,9 +242,7 @@ export async function getCurrentLocation(): Promise<Location.LocationObject | nu
     }
 }
 
-/**
- * Check if geofencing is active
- */
+
 export async function isGeofencingActive(): Promise<boolean> {
     try {
         const isTaskDefined = await TaskManager.isTaskDefined(GEOFENCING_TASK);
@@ -276,45 +256,41 @@ export async function isGeofencingActive(): Promise<boolean> {
     }
 }
 
-// ============== IDLE DETECTION FEATURE ==============
 
-// Task name for idle detection
+
+
 const IDLE_DETECTION_TASK = 'IDLE_DETECTION_TASK';
 
-// Storage keys for idle detection
+
 const IDLE_DETECTION_ENABLED_KEY = '@idle_detection_enabled';
 const LAST_LOCATION_KEY = '@last_location';
 const LAST_LOCATION_TIME_KEY = '@last_location_time';
 
-// Idle threshold in milliseconds (30 seconds for testing)
+
 const IDLE_THRESHOLD_MS = 30 * 1000;
 
-// Daytime hours (6 AM to 10 PM)
+
 const DAYTIME_START_HOUR = 6;
 const DAYTIME_END_HOUR = 22;
 
-// Distance threshold in meters to consider as "same location"
+
 const SAME_LOCATION_THRESHOLD_METERS = 50;
 
-/**
- * Check if current time is within daytime hours
- */
+
 function isDaytime(): boolean {
     const now = new Date();
     const hours = now.getHours();
     return hours >= DAYTIME_START_HOUR && hours < DAYTIME_END_HOUR;
 }
 
-/**
- * Calculate distance between two coordinates in meters
- */
+
 function calculateDistance(
     lat1: number,
     lon1: number,
     lat2: number,
     lon2: number
 ): number {
-    const R = 6371e3; // Earth's radius in meters
+    const R = 6371e3;
     const φ1 = (lat1 * Math.PI) / 180;
     const φ2 = (lat2 * Math.PI) / 180;
     const Δφ = ((lat2 - lat1) * Math.PI) / 180;
@@ -328,14 +304,14 @@ function calculateDistance(
     return R * c;
 }
 
-// Define the idle detection background task
+
 TaskManager.defineTask(IDLE_DETECTION_TASK, async ({ data, error }) => {
     if (error) {
         console.error('Idle detection task error:', error);
         return;
     }
 
-    // Only run during daytime
+
     if (!isDaytime()) {
         console.log('Idle detection skipped - not daytime');
         return;
@@ -349,7 +325,7 @@ TaskManager.defineTask(IDLE_DETECTION_TASK, async ({ data, error }) => {
         const currentTime = Date.now();
 
         try {
-            // Get previous location data
+
             const lastLocationStr = await AsyncStorage.getItem(LAST_LOCATION_KEY);
             const lastTimeStr = await AsyncStorage.getItem(LAST_LOCATION_TIME_KEY);
 
@@ -357,7 +333,7 @@ TaskManager.defineTask(IDLE_DETECTION_TASK, async ({ data, error }) => {
                 const lastLocation = JSON.parse(lastLocationStr);
                 const lastTime = parseInt(lastTimeStr, 10);
 
-                // Calculate distance from last location
+
                 const distance = calculateDistance(
                     lastLocation.latitude,
                     lastLocation.longitude,
@@ -365,18 +341,18 @@ TaskManager.defineTask(IDLE_DETECTION_TASK, async ({ data, error }) => {
                     currentLocation.coords.longitude
                 );
 
-                // Check if user is still at same location
+
                 if (distance < SAME_LOCATION_THRESHOLD_METERS) {
                     const idleTime = currentTime - lastTime;
 
-                    // If idle for more than threshold, send notification
+
                     if (idleTime >= IDLE_THRESHOLD_MS) {
                         await sendIdleNotification(idleTime);
-                        // Reset the timer after notification
+
                         await AsyncStorage.setItem(LAST_LOCATION_TIME_KEY, currentTime.toString());
                     }
                 } else {
-                    // User moved - update location and reset timer
+
                     await AsyncStorage.setItem(
                         LAST_LOCATION_KEY,
                         JSON.stringify({
@@ -387,7 +363,7 @@ TaskManager.defineTask(IDLE_DETECTION_TASK, async ({ data, error }) => {
                     await AsyncStorage.setItem(LAST_LOCATION_TIME_KEY, currentTime.toString());
                 }
             } else {
-                // First location - save it
+
                 await AsyncStorage.setItem(
                     LAST_LOCATION_KEY,
                     JSON.stringify({
@@ -403,9 +379,7 @@ TaskManager.defineTask(IDLE_DETECTION_TASK, async ({ data, error }) => {
     }
 });
 
-/**
- * Send idle notification
- */
+
 async function sendIdleNotification(idleTimeMs: number): Promise<void> {
     try {
         const minutes = Math.floor(idleTimeMs / 60000);
@@ -417,7 +391,7 @@ async function sendIdleNotification(idleTimeMs: number): Promise<void> {
                 sound: true,
                 priority: Notifications.AndroidNotificationPriority.HIGH,
             },
-            trigger: null, // Send immediately
+            trigger: null,
         });
 
         console.log('Idle notification sent');
@@ -426,26 +400,24 @@ async function sendIdleNotification(idleTimeMs: number): Promise<void> {
     }
 }
 
-/**
- * Start idle detection monitoring
- */
+
 export async function startIdleDetection(): Promise<void> {
     try {
-        // Check if already running
+
         const isRegistered = await TaskManager.isTaskRegisteredAsync(IDLE_DETECTION_TASK);
         if (isRegistered) {
             console.log('Idle detection already running');
             return;
         }
 
-        // Request permissions
+
         const hasPermissions = await requestPermissions();
         if (!hasPermissions) {
             console.log('Missing permissions for idle detection');
             return;
         }
 
-        // Get initial location
+
         const currentLocation = await getCurrentLocation();
         if (currentLocation) {
             await AsyncStorage.setItem(
@@ -458,11 +430,11 @@ export async function startIdleDetection(): Promise<void> {
             await AsyncStorage.setItem(LAST_LOCATION_TIME_KEY, Date.now().toString());
         }
 
-        // Start background location tracking
+
         await Location.startLocationUpdatesAsync(IDLE_DETECTION_TASK, {
             accuracy: Location.Accuracy.Balanced,
-            timeInterval: 30000, // Check every 30 seconds
-            distanceInterval: 10, // Or when moved 10 meters
+            timeInterval: 30000,
+            distanceInterval: 10,
             foregroundService: {
                 notificationTitle: 'Activity Monitor',
                 notificationBody: 'Monitoring your activity to keep you moving',
@@ -480,9 +452,7 @@ export async function startIdleDetection(): Promise<void> {
     }
 }
 
-/**
- * Stop idle detection monitoring
- */
+
 export async function stopIdleDetection(): Promise<void> {
     try {
         const isRegistered = await TaskManager.isTaskRegisteredAsync(IDLE_DETECTION_TASK);
@@ -500,9 +470,7 @@ export async function stopIdleDetection(): Promise<void> {
     }
 }
 
-/**
- * Check if idle detection is enabled
- */
+
 export async function isIdleDetectionEnabled(): Promise<boolean> {
     try {
         const enabled = await AsyncStorage.getItem(IDLE_DETECTION_ENABLED_KEY);
@@ -513,9 +481,7 @@ export async function isIdleDetectionEnabled(): Promise<boolean> {
     }
 }
 
-/**
- * Check if idle detection is currently active (task running)
- */
+
 export async function isIdleDetectionActive(): Promise<boolean> {
     try {
         return await TaskManager.isTaskRegisteredAsync(IDLE_DETECTION_TASK);

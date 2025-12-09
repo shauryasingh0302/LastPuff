@@ -1,20 +1,22 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from "react-native";
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LPColors } from "../constants/theme";
 import { useGoals } from "../context/GoalsContext";
 
-// compulsory 5 goals always shown
+
 const compulsoryGoalsList = [
   { icon: "ban-outline", text: "Take 10,000 steps" },
   { icon: "water-outline", text: "Drink 3 glasses of water" },
@@ -23,7 +25,7 @@ const compulsoryGoalsList = [
   { icon: "walk-outline", text: "Walk 10 minutes" },
 ];
 
-// Suggested goals that appear in modal
+
 const suggestedGoalsList = [
   { icon: "game-controller-outline", text: "Play 1 focus game" },
   { icon: "bed-outline", text: "Sleep 7 hours" },
@@ -43,21 +45,27 @@ export default function GoalsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* HEADER SAME STYLE AS SOS */}
-      <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-        <Ionicons name="chevron-back" size={28} color={LPColors.primary} />
-      </TouchableOpacity>
+    <LinearGradient
+      colors={[LPColors.bg, '#000000']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={{ flex: 1 }}
+    >
+    <SafeAreaView style={[styles.container, { backgroundColor: 'transparent' }]}>
+      <Animated.View entering={FadeInDown.delay(100).duration(500)}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Ionicons name="chevron-back" size={28} color={LPColors.primary} />
+        </TouchableOpacity>
 
-      <Text style={styles.title}>Goals</Text>
-      <Text style={styles.subtitle}>Daily and Weekly targets to stay on track</Text>
+        <Text style={styles.title}>Goals</Text>
+        <Text style={styles.subtitle}>Daily and Weekly targets to stay on track</Text>
+      </Animated.View>
 
-      {/* PAGE CONTENT */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Daily Goals</Text>
 
-          {/* All goals from context */}
+          {}
           {goals.map((goal) => (
             <View key={goal.id} style={styles.goalItem}>
               <Ionicons name={(goal.icon || "create-outline") as any} size={22} color={LPColors.primary} />
@@ -75,20 +83,19 @@ export default function GoalsScreen() {
             </View>
           ))}
 
-          {/* ADD GOAL BUTTON */}
+          {}
           <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
             <Text style={styles.addButtonText}>Add Daily Goal</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* POPUP BOTTOM SHEET */}
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add Goal</Text>
 
-            {/* suggested goals */}
+            {}
             {suggestedGoalsList.map((goal, index) => (
               <TouchableOpacity
                 key={index}
@@ -100,7 +107,7 @@ export default function GoalsScreen() {
               </TouchableOpacity>
             ))}
 
-            {/* custom goal input */}
+            {}
             <TextInput
               placeholder="Write your goal..."
               placeholderTextColor="#666"
@@ -118,7 +125,7 @@ export default function GoalsScreen() {
               <Text style={styles.addButtonText}>Add</Text>
             </TouchableOpacity>
 
-            {/* CLOSE */}
+            {}
             <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.cancelBtn}>
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
@@ -126,6 +133,7 @@ export default function GoalsScreen() {
         </View>
       </Modal>
     </SafeAreaView>
+    </LinearGradient>
   );
 }
 

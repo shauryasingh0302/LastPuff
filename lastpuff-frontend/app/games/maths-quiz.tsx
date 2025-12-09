@@ -95,7 +95,7 @@ export default function MathsQuizGame() {
 
     return (
         <SafeAreaView style={styles.container}>
-            {/* Header */}
+            {}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="chevron-back" size={28} color={LPColors.primary} />
@@ -107,12 +107,12 @@ export default function MathsQuizGame() {
                 </View>
             </View>
 
-            {/* Instructions */}
+            {}
             <Text style={styles.instructions}>
                 Solve as many math problems as you can in 60 seconds!
             </Text>
 
-            {/* Timer & Streak */}
+            {}
             <View style={styles.statsRow}>
                 <View style={styles.statBox}>
                     <Ionicons name="time" size={24} color={LPColors.primary} />
@@ -126,7 +126,7 @@ export default function MathsQuizGame() {
                 </View>
             </View>
 
-            {/* Question Area */}
+            {}
             {isPlaying && question ? (
                 <View style={[styles.questionCard, feedback === 'correct' && styles.correctCard, feedback === 'wrong' && styles.wrongCard]}>
                     <Text style={styles.questionText}>
@@ -180,7 +180,7 @@ export default function MathsQuizGame() {
                 </View>
             )}
 
-            {/* Info */}
+            {}
             <View style={styles.infoCard}>
                 <Ionicons name="bulb" size={20} color={LPColors.primary} />
                 <Text style={styles.infoText}>

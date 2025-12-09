@@ -1,5 +1,5 @@
-// app/community/AddPost.tsx
-//@ts-ignore
+
+
 import React, { useState } from "react";
 import {
   View,
@@ -50,7 +50,7 @@ export default function AddPostScreen() {
         const extMatch = /\.(\w+)$/.exec(filename);
         const type = extMatch ? `image/${extMatch[1]}` : "image/jpeg";
 
-        // @ts-ignore
+
         form.append("images", {
           uri: img.uri,
           name: filename,
@@ -69,7 +69,7 @@ export default function AddPostScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ padding: 20 }}>
-      {/* Header */}
+      {}
       <View style={styles.headerRow}>
         <Text style={styles.title}>Create Post</Text>
 
@@ -78,7 +78,7 @@ export default function AddPostScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Input */}
+      {}
       <TextInput
         placeholder="Share your thoughts..."
         placeholderTextColor={LPColors.gray}
@@ -88,13 +88,13 @@ export default function AddPostScreen() {
         onChangeText={setContent}
       />
 
-      {/* Upload Button */}
+      {}
       <TouchableOpacity style={styles.uploadBar} onPress={pickImage}>
         <Ionicons name="image-outline" size={20} color={LPColors.neon} />
         <Text style={styles.uploadBarText}>Add Image</Text>
       </TouchableOpacity>
 
-      {/* Images Preview */}
+      {}
       <View style={styles.imageGrid}>
         {images.map((img, index) => (
           <View key={index} style={styles.imageWrapper}>
@@ -112,7 +112,7 @@ export default function AddPostScreen() {
         ))}
       </View>
 
-      {/* Submit */}
+      {}
       <TouchableOpacity
         style={[styles.submit, loading && { opacity: 0.6 }]}
         onPress={submit}

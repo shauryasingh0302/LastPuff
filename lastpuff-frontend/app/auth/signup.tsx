@@ -19,13 +19,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { AuthContext } from "../../context/AuthContext";
 
-/* ---------- Response Type ---------- */
+
 interface SignupResponse {
   user: any;
   token: string;
 }
 
-/* ---------- Responsive Helpers ---------- */
+
 const { width, height } = Dimensions.get("window");
 const wp = (p: number) => (width * p) / 100;
 const hp = (p: number) => (height * p) / 100;
@@ -55,20 +55,20 @@ export default function SignupScreen() {
 
       console.log('[Signup] Starting signup process');
 
-      // Validate required fields
+
       if (!form.name || !form.email || !form.password) {
         setError("Please fill in all required fields (Name, Email, Password)");
         return;
       }
 
-      // Validate email format
+
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(form.email)) {
         setError("Please enter a valid email address");
         return;
       }
 
-      // Validate password length
+
       if (form.password.length < 6) {
         setError("Password must be at least 6 characters");
         return;
@@ -85,8 +85,8 @@ export default function SignupScreen() {
 
       console.log('[Signup] Payload prepared for:', payload.email);
 
-      // Navigate to questionnaire with signup data
-      // Account will ONLY be created when user selects a plan
+
+
       const signupDataStr = JSON.stringify(payload);
       console.log('[Signup] Navigating to questionnaire with data length:', signupDataStr.length);
 
@@ -115,7 +115,7 @@ export default function SignupScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scroll}
         >
-          {/* HEADER */}
+          {}
           <View style={styles.header}>
             <View style={styles.iconCircle}>
               <Ionicons name="person-add" size={RFValue(38)} color="#000" />
@@ -127,7 +127,7 @@ export default function SignupScreen() {
             </Text>
           </View>
 
-          {/* INPUTS */}
+          {}
           <View style={styles.inputBox}>
             <Ionicons name="person-outline" size={RFValue(18)} color={PLACEHOLDER} />
             <TextInput
@@ -161,7 +161,7 @@ export default function SignupScreen() {
             />
           </View>
 
-          {/* Age */}
+          {}
           <View style={styles.inputBox}>
             <Ionicons name="calendar-outline" size={RFValue(18)} color={PLACEHOLDER} />
             <TextInput
@@ -173,7 +173,7 @@ export default function SignupScreen() {
             />
           </View>
 
-          {/* Height */}
+          {}
           <View style={styles.inputBox}>
             <Ionicons name="resize-outline" size={RFValue(18)} color={PLACEHOLDER} />
             <TextInput
@@ -185,7 +185,7 @@ export default function SignupScreen() {
             />
           </View>
 
-          {/* Weight */}
+          {}
           <View style={styles.inputBox}>
             <Ionicons name="barbell-outline" size={RFValue(18)} color={PLACEHOLDER} />
             <TextInput
@@ -197,10 +197,10 @@ export default function SignupScreen() {
             />
           </View>
 
-          {/* ERROR */}
+          {}
           {error ? <Text style={styles.error}>{error}</Text> : null}
 
-          {/* SIGN UP BUTTON */}
+          {}
           <TouchableOpacity onPress={onSignup} activeOpacity={0.8}>
             <LinearGradient
               colors={["#39FF14", "#00A84F"]}
@@ -212,7 +212,7 @@ export default function SignupScreen() {
             </LinearGradient>
           </TouchableOpacity>
 
-          {/* SWITCH TO LOGIN */}
+          {}
           <TouchableOpacity onPress={() => router.push("/auth/login")}>
             <Text style={styles.switchText}>
               Already have an account?{" "}
@@ -225,7 +225,7 @@ export default function SignupScreen() {
   );
 }
 
-/* ---------- STYLES ---------- */
+
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#000" },

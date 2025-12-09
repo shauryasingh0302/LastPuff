@@ -1,6 +1,7 @@
-import React, { createContext, useState, useEffect, ReactNode } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { createContext, ReactNode, useEffect, useState } from "react";
 import { setAuthToken } from "../services/api";
+import { registerForPushNotificationsAsync } from "../services/notifications";
 
 interface AuthContextType {
   user: any;
@@ -16,8 +17,8 @@ export const AuthContext = createContext<AuthContextType>({
   token: null,
   loading: true,
   isAuthenticated: false,
-  loginUser: async () => {},
-  logout: async () => {},
+  loginUser: async () => { },
+  logout: async () => { },
 });
 
 interface Props {
@@ -29,7 +30,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
   const [token, setTokenValue] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Load stored user and token on app start
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -40,6 +41,9 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
           setUser(JSON.parse(savedUser));
           setTokenValue(savedToken);
           setAuthToken(savedToken);
+
+          // Register for push notifications on load
+          registerForPushNotificationsAsync();
         }
       } catch (err) {
         console.log("Error loading auth data", err);
@@ -51,7 +55,7 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
     loadData();
   }, []);
 
-  // Handle login — Save user & token
+
   const loginUser = async (userData: any, userToken: string) => {
     setUser(userData);
     setTokenValue(userToken);
@@ -59,9 +63,12 @@ export const AuthProvider: React.FC<Props> = ({ children }) => {
 
     await AsyncStorage.setItem("user", JSON.stringify(userData));
     await AsyncStorage.setItem("token", userToken);
+
+    // Register for push notifications on login
+    registerForPushNotificationsAsync();
   };
 
-  // Handle logout — Clear data & remove token from axios
+
   const logout = async () => {
     await AsyncStorage.removeItem("token");
     await AsyncStorage.removeItem("user");

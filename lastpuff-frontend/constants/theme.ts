@@ -1,9 +1,6 @@
-/**
- * Global Theme System (Light + Dark)
- * + LastPuff Custom Theme Colors
- */
 
-import { Platform, Appearance } from "react-native";
+
+import { Platform } from "react-native";
 
 const tintColorLight = "#39FF14";
 const tintColorDark = "#39FF14";
@@ -25,35 +22,53 @@ export const Colors = {
   },
 };
 
-/**
- * LASTPUFF GLOBAL COLOR PALETTE
- * Always available — ignores system theme.
- */
-export const LPColors = {
-  // Core Interface
-  bg: "#040B07",        // Very deep dark green (almost black)
-  surface: "#0D1F16",   // Dark green for cards
-  surfaceLight: "#162E23", // Lighter green for elevated surfaces
 
-  // Accents
-  primary: "#39FF14",   // High-vis neon green
-  secondary: "#00CF85", // Teal/Mint accent
+export const LPColors = {
+  // Backgrounds
+  bg: "#050B07", // Deep dark green/black
+  surface: "#0E1F18", // Slightly lighter
+  surfaceLight: "#1A2F26", // For cards/inputs
+  surfaceHighlight: "#254035", // For active states
+
+  // Brand Colors
+  primary: "#39FF14", // Neon Green
+  primaryDark: "#2bb810",
+  secondary: "#00CF85", // Teal Green
+  accent: "#00E5FF", // Cyan for variety
 
   // Text
   text: "#FFFFFF",
   textGray: "#A0AEC0",
   textMuted: "#6B7280",
+  textHighlight: "#E2E8F0",
 
-  // States
+  // Status
   border: "#1F382A",
   success: "#39FF14",
   error: "#FF453A",
   warning: "#FFD60A",
+  info: "#00E5FF",
 
-  // Legacy mappings for backward compatibility
+  // UI Elements
   neon: "#39FF14",
-  card: "#0D1F16",
+  card: "#0E1F18",
   gray: "#A0AEC0",
+  
+  // Gradients
+  gradientStart: "#39FF14",
+  gradientEnd: "#00CF85",
+  
+  // Shadows
+  shadow: {
+    shadowColor: "#39FF14",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+  }
 };
 
 export const Fonts = Platform.select({

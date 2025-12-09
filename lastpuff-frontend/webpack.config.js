@@ -11,7 +11,7 @@ module.exports = async function (env, argv) {
         argv
     );
 
-    // Add alias to use web-specific geofencing file
+
     config.resolve.alias = {
         ...config.resolve.alias,
         './geofencing': './geofencing.web',

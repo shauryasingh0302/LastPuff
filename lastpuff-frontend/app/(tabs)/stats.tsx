@@ -1,462 +1,430 @@
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import React from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useContext, useState } from 'react';
+import { Dimensions, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LPColors } from '../../constants/theme';
+import { AuthContext } from '../../context/AuthContext';
+import { useGoals } from '../../context/GoalsContext';
+import { useSteps } from '../../context/StepsContext';
+
+const { width } = Dimensions.get('window');
 
 export default function StatsScreen() {
-  return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Dashboard</Text>
-      </View>
+    const auth: any = useContext(AuthContext);
+    const userName = auth?.user?.name || 'User';
+    const { streak } = useGoals();
+    const { currentSteps, caloriesBurnt, distanceTraveled } = useSteps();
+    const [refreshing, setRefreshing] = useState(false);
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Performance Highlights */}
-        <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.performanceContainer}>
-          <Text style={styles.performanceTitle}>Performance Summary</Text>
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        setTimeout(() => {
+            setRefreshing(false);
+        }, 1500);
+    }, []);
 
-          <View style={styles.highlightCard}>
-            <View style={styles.highlightIconContainer}>
-              <Ionicons name="ban-outline" size={20} color={LPColors.primary} />
-            </View>
-            <Text style={styles.highlightText}>You avoided 0 cigarettes</Text>
-          </View>
 
-          <View style={styles.highlightCard}>
-            <View style={styles.highlightIconContainer}>
-              <Ionicons name="wallet-outline" size={20} color="#FFD700" />
-            </View>
-            <Text style={styles.highlightText}>You saved ₹0 today</Text>
-          </View>
+    const daysSmokeFree = 5;
+    const cigarettesAvoided = 75;
+    const moneySaved = 1500;
+    const healthImprovement = 68;
 
-          <View style={styles.highlightCard}>
-            <View style={styles.highlightIconContainer}>
-              <Ionicons name="heart-outline" size={20} color="#FF6B6B" />
-            </View>
-            <Text style={styles.highlightText}>Your cancer risk dropped by 0%</Text>
-          </View>
 
-          <View style={styles.highlightCard}>
-            <View style={styles.highlightIconContainer}>
-              <Ionicons name="flame-outline" size={20} color="#FF9500" />
-            </View>
-            <Text style={styles.highlightText}>You handled 0 cravings successfully</Text>
-          </View>
+    const weeklyData = [
+        { day: 'Mon', cigarettes: 0, cravings: 3 },
+        { day: 'Tue', cigarettes: 0, cravings: 2 },
+        { day: 'Wed', cigarettes: 0, cravings: 4 },
+        { day: 'Thu', cigarettes: 0, cravings: 1 },
+        { day: 'Fri', cigarettes: 0, cravings: 2 },
+        { day: 'Sat', cigarettes: 0, cravings: 1 },
+        { day: 'Sun', cigarettes: 0, cravings: 0 },
+    ];
 
-          <LinearGradient
-            colors={[LPColors.primary, '#004d2c']}
+    const maxCravings = Math.max(...weeklyData.map(d => d.cravings));
+
+    return (
+        <LinearGradient
+            colors={[LPColors.bg, '#000000']}
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.highlightGradientCard}
-          >
-            <View style={styles.highlightIconContainer}>
-              <Ionicons name="trophy" size={20} color="#000" />
-            </View>
-            <Text style={[styles.highlightText, { color: '#000', fontWeight: 'bold' }]}>Streak: 0 days (Start your journey!)</Text>
-          </LinearGradient>
-        </Animated.View>
-
-        {/* Weekly Progress */}
-        <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.weeklySection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Weekly Progress</Text>
-            <Ionicons name="bar-chart-outline" size={20} color={LPColors.primary} />
-          </View>
-          <View style={styles.chartContainer}>
-            {[{ label: 'Mon', height: 0 }, { label: 'Tue', height: 0 }, { label: 'Wed', height: 0 }, { label: 'Thu', height: 0 }, { label: 'Fri', height: 0 }, { label: 'Sat', height: 0 }, { label: 'Sun', height: 0 }].map((item, index) => (
-              <View key={index} style={styles.chartItem}>
-                <View style={[styles.chartBarContainer, { height: 100 }]}>
-                  <LinearGradient
-                    colors={[LPColors.primary, 'rgba(57, 255, 20, 0.3)']}
-                    style={[styles.chartBar, { height: item.height }]}
-                  />
+            end={{ x: 1, y: 1 }}
+            style={{ flex: 1 }}
+        >
+        <SafeAreaView style={[styles.container, { backgroundColor: 'transparent' }]}>
+            <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.header}>
+                <View>
+                    <Text style={styles.greeting}>Your Progress</Text>
+                    <Text style={styles.headerTitle}>{userName}</Text>
                 </View>
-                <Text style={styles.chartLabel}>{item.label}</Text>
-              </View>
-            ))}
-          </View>
-        </Animated.View>
+                <View style={styles.streakBadge}>
+                    <Ionicons name="flame" size={20} color="#FF6B6B" />
+                    <Text style={styles.streakText}>{streak} days</Text>
+                </View>
+            </Animated.View>
 
-        {/* Monthly Insights */}
-        <Animated.View entering={FadeInDown.delay(300).duration(500)} style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Monthly Insights</Text>
-            <Ionicons name="calendar-outline" size={20} color={LPColors.primary} />
-          </View>
-          <View style={styles.insightsGrid}>
-            <LinearGradient colors={[LPColors.surfaceLight, LPColors.surface]} style={styles.insightCard}>
-              <Text style={styles.insightLabel}>Cigarettes Avoided</Text>
-              <Text style={styles.insightValue}>0</Text>
-            </LinearGradient>
-            <LinearGradient colors={[LPColors.surfaceLight, LPColors.surface]} style={styles.insightCard}>
-              <Text style={styles.insightLabel}>Cravings Handled</Text>
-              <Text style={styles.insightValue}>0</Text>
-            </LinearGradient>
-            <LinearGradient colors={[LPColors.surfaceLight, LPColors.surface]} style={styles.insightCard}>
-              <Text style={styles.insightLabel}>Success %</Text>
-              <Text style={styles.insightValue}>0%</Text>
-            </LinearGradient>
-          </View>
-        </Animated.View>
+            <ScrollView 
+                style={styles.scrollView} 
+                contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
+                showsVerticalScrollIndicator={false}
+                refreshControl={
+                    <RefreshControl 
+                        refreshing={refreshing} 
+                        onRefresh={onRefresh}
+                        tintColor={LPColors.primary}
+                        colors={[LPColors.primary]}
+                    />
+                }
+            >
+                {}
+                <Animated.View entering={FadeInDown.delay(200)} style={styles.mainStatsGrid}>
+                    <LinearGradient
+                        colors={['#39FF14', '#138808']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.mainStatCard}
+                    >
+                        <Ionicons name="calendar" size={32} color="#000" />
+                        <Text style={styles.mainStatValue}>{daysSmokeFree}</Text>
+                        <Text style={styles.mainStatLabel}>Days Smoke Free</Text>
+                    </LinearGradient>
 
-        {/* Finance Section */}
-        <Animated.View entering={FadeInDown.delay(400).duration(500)} style={styles.financeSection}>
-          <LinearGradient
-            colors={['rgba(57, 255, 20, 0.1)', 'transparent']}
-            style={styles.financeGradient}
-          >
-            <View style={styles.financeHeader}>
-              <View style={styles.iconCircle}>
-                <Ionicons name="wallet" size={24} color={LPColors.primary} />
-              </View>
-              <View style={styles.financeText}>
-                <Text style={styles.financeLabel}>Finance</Text>
-                <Text style={styles.financeValue}>₹0 Saved This Month</Text>
-              </View>
-            </View>
-          </LinearGradient>
-        </Animated.View>
+                    <LinearGradient
+                        colors={['#FF6B6B', '#C92A2A']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.mainStatCard}
+                    >
+                        <Ionicons name="close-circle" size={32} color="#FFF" />
+                        <Text style={styles.mainStatValue}>{cigarettesAvoided}</Text>
+                        <Text style={styles.mainStatLabel}>Cigarettes Avoided</Text>
+                    </LinearGradient>
+                </Animated.View>
 
-        {/* Health Improvements */}
-        <Animated.View entering={FadeInDown.delay(500).duration(500)} style={styles.section}>
-          <Text style={styles.sectionTitle}>Health Improvements</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.healthGrid}>
-            <View style={styles.healthCard}>
-              <Ionicons name="fitness-outline" size={24} color={LPColors.primary} />
-              <Text style={styles.healthLabel}>Lung Capacity</Text>
-              <Text style={styles.healthValue}>0%</Text>
-            </View>
-            <View style={styles.healthCard}>
-              <Ionicons name="heart-outline" size={24} color={LPColors.primary} />
-              <Text style={styles.healthLabel}>Cancer Risk</Text>
-              <Text style={styles.healthValue}>0%</Text>
-            </View>
-            <View style={styles.healthCard}>
-              <Ionicons name="pulse-outline" size={24} color={LPColors.primary} />
-              <Text style={styles.healthLabel}>Heart Rate</Text>
-              <Text style={styles.healthValue}>-</Text>
-            </View>
-          </ScrollView>
-        </Animated.View>
+                {}
+                <Animated.View entering={FadeInDown.delay(300)} style={styles.secondaryGrid}>
+                    <View style={styles.secondaryCard}>
+                        <View style={styles.secondaryIconContainer}>
+                            <Ionicons name="cash" size={24} color="#39FF14" />
+                        </View>
+                        <Text style={styles.secondaryValue}>₹{moneySaved}</Text>
+                        <Text style={styles.secondaryLabel}>Money Saved</Text>
+                    </View>
 
-        {/* Rewards Earned */}
-        <Animated.View entering={FadeInDown.delay(600).duration(500)} style={styles.section}>
-          <Text style={styles.sectionTitle}>Rewards Earned</Text>
-          <View style={styles.rewardsGrid}>
-            <View style={styles.rewardCard}>
-              <Ionicons name="medal-outline" size={32} color="#FFD700" />
-              <Text style={[styles.rewardLabel, { color: '#FFD700' }]}>Badge</Text>
-              <Text style={styles.rewardSubLabel}>0-day streak</Text>
-            </View>
-            <View style={styles.rewardCard}>
-              <Ionicons name="trophy-outline" size={32} color="#C0C0C0" />
-              <Text style={[styles.rewardLabel, { color: '#C0C0C0' }]}>Team</Text>
-              <Text style={styles.rewardSubLabel}>Top 0%</Text>
-            </View>
-            <View style={styles.rewardCard}>
-              <Ionicons name="ribbon-outline" size={32} color="#CD7F32" />
-              <Text style={[styles.rewardLabel, { color: '#CD7F32' }]}>Solo</Text>
-              <Text style={styles.rewardSubLabel}>0 wins</Text>
-            </View>
-          </View>
-        </Animated.View>
+                    <View style={styles.secondaryCard}>
+                        <View style={styles.secondaryIconContainer}>
+                            <Ionicons name="heart" size={24} color="#FF6B6B" />
+                        </View>
+                        <Text style={styles.secondaryValue}>{healthImprovement}%</Text>
+                        <Text style={styles.secondaryLabel}>Health Score</Text>
+                    </View>
+                </Animated.View>
 
-        {/* Achievement Timeline */}
-        <Animated.View entering={FadeInDown.delay(700).duration(500)} style={[styles.section, { marginBottom: 100 }]}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Achievement Timeline</Text>
-            <Ionicons name="time-outline" size={20} color={LPColors.primary} />
-          </View>
+                {}
+                <Animated.View entering={FadeInDown.delay(400)} style={styles.chartSection}>
+                    <Text style={styles.sectionTitle}>Weekly Cravings</Text>
+                    <View style={styles.chartCard}>
+                        <View style={styles.chartContainer}>
+                            {weeklyData.map((data, index) => (
+                                <View key={index} style={styles.chartBar}>
+                                    <View style={styles.barContainer}>
+                                        <View
+                                            style={[
+                                                styles.bar,
+                                                {
+                                                    height: `${(data.cravings / maxCravings) * 100}%`,
+                                                    backgroundColor: data.cravings === 0 ? LPColors.primary : '#FF6B6B',
+                                                },
+                                            ]}
+                                        />
+                                    </View>
+                                    <Text style={styles.barLabel}>{data.day}</Text>
+                                    <Text style={styles.barValue}>{data.cravings}</Text>
+                                </View>
+                            ))}
+                        </View>
+                        <Text style={styles.chartNote}>Lower is better! 🎯</Text>
+                    </View>
+                </Animated.View>
 
-          <View style={styles.timelineItem}>
-            <View style={styles.timelineConnect} />
-            <View style={styles.timelineIcon}>
-              <Ionicons name="checkmark" size={14} color="#000" />
-            </View>
-            <View style={styles.timelineContent}>
-              <Text style={styles.timelineTitle}>Day 15</Text>
-              <Text style={styles.timelineText}>Completed 2 cravings this week</Text>
-            </View>
-          </View>
+                {}
+                <Animated.View entering={FadeInDown.delay(500)} style={styles.fitnessSection}>
+                    <Text style={styles.sectionTitle}>Today's Activity</Text>
+                    <View style={styles.fitnessGrid}>
+                        <View style={styles.fitnessCard}>
+                            <Ionicons name="footsteps" size={28} color={LPColors.primary} />
+                            <Text style={styles.fitnessValue}>{currentSteps.toLocaleString()}</Text>
+                            <Text style={styles.fitnessLabel}>Steps</Text>
+                        </View>
 
-          <View style={styles.timelineItem}>
-            <View style={styles.timelineConnect} />
-            <View style={styles.timelineIcon}>
-              <Ionicons name="star" size={14} color="#000" />
-            </View>
-            <View style={styles.timelineContent}>
-              <Text style={styles.timelineTitle}>Day 7</Text>
-              <Text style={styles.timelineText}>Earned bronze streak badge</Text>
-            </View>
-          </View>
+                        <View style={styles.fitnessCard}>
+                            <Ionicons name="navigate" size={28} color="#4A90E2" />
+                            <Text style={styles.fitnessValue}>{(distanceTraveled / 1000).toFixed(2)}</Text>
+                            <Text style={styles.fitnessLabel}>km</Text>
+                        </View>
 
-          <View style={styles.timelineItem}>
-            <View style={[styles.timelineIcon, { backgroundColor: LPColors.surfaceLight }]}>
-              <Ionicons name="sparkles" size={14} color={LPColors.textGray} />
-            </View>
-            <View style={styles.timelineContent}>
-              <Text style={[styles.timelineTitle, { color: LPColors.textGray }]}>Tonight</Text>
-              <Text style={styles.timelineText}>Evening watch call starting in 18h!</Text>
-            </View>
-          </View>
-        </Animated.View>
-      </ScrollView>
-    </SafeAreaView>
-  );
+                        <View style={styles.fitnessCard}>
+                            <Ionicons name="flame" size={28} color="#FF6B6B" />
+                            <Text style={styles.fitnessValue}>{caloriesBurnt}</Text>
+                            <Text style={styles.fitnessLabel}>kcal</Text>
+                        </View>
+                    </View>
+                </Animated.View>
+
+                {}
+                <Animated.View entering={FadeInDown.delay(600)} style={styles.milestonesSection}>
+                    <Text style={styles.sectionTitle}>Achievements</Text>
+                    <View style={styles.milestonesCard}>
+                        <View style={styles.milestoneItem}>
+                            <View style={[styles.milestoneIcon, { backgroundColor: 'rgba(57,255,20,0.2)' }]}>
+                                <Ionicons name="checkmark-circle" size={24} color={LPColors.primary} />
+                            </View>
+                            <View style={styles.milestoneInfo}>
+                                <Text style={styles.milestoneTitle}>First Day Completed</Text>
+                                <Text style={styles.milestoneDate}>5 days ago</Text>
+                            </View>
+                        </View>
+
+                        <View style={styles.milestoneItem}>
+                            <View style={[styles.milestoneIcon, { backgroundColor: 'rgba(57,255,20,0.2)' }]}>
+                                <Ionicons name="trophy" size={24} color="#FFD700" />
+                            </View>
+                            <View style={styles.milestoneInfo}>
+                                <Text style={styles.milestoneTitle}>5 Day Streak</Text>
+                                <Text style={styles.milestoneDate}>Today</Text>
+                            </View>
+                        </View>
+
+                        <View style={styles.milestoneItem}>
+                            <View style={[styles.milestoneIcon, { backgroundColor: 'rgba(255,255,255,0.05)' }]}>
+                                <Ionicons name="star-outline" size={24} color={LPColors.textGray} />
+                            </View>
+                            <View style={styles.milestoneInfo}>
+                                <Text style={[styles.milestoneTitle, { color: LPColors.textGray }]}>One Week Smoke Free</Text>
+                                <Text style={styles.milestoneDate}>2 days to go</Text>
+                            </View>
+                        </View>
+                    </View>
+                </Animated.View>
+
+                <View style={{ height: 100 }} />
+            </ScrollView>
+        </SafeAreaView>
+        </LinearGradient>
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0A0A0A',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: LPColors.text,
-  },
-  scrollView: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  performanceContainer: {
-    marginBottom: 24,
-  },
-  performanceTitle: {
-    fontSize: 16,
-    color: LPColors.primary,
-    marginBottom: 16,
-    fontWeight: '600',
-  },
-  weeklySection: {
-    backgroundColor: LPColors.surfaceLight,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: LPColors.text,
-    marginBottom: 16,
-  },
-  highlightCard: {
-    backgroundColor: LPColors.surfaceLight,
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  highlightGradientCard: {
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  highlightIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  highlightText: {
-    fontSize: 14,
-    color: LPColors.text,
-    flex: 1,
-    fontWeight: '500',
-  },
-  chartContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    paddingTop: 16,
-  },
-  chartItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  chartBarContainer: {
-    width: '100%',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  chartBar: {
-    width: '100%',
-    borderRadius: 10,
-  },
-  chartLabel: {
-    fontSize: 10,
-    color: LPColors.textGray,
-    marginTop: 8,
-  },
-  insightsGrid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  insightCard: {
-    flex: 1,
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
-  },
-  insightLabel: {
-    fontSize: 11,
-    color: LPColors.textGray,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  insightValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: LPColors.text,
-  },
-  financeSection: {
-    backgroundColor: LPColors.surfaceLight,
-    borderRadius: 16,
-    marginBottom: 24,
-    overflow: 'hidden',
-  },
-  financeGradient: {
-    padding: 20,
-  },
-  financeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(57, 255, 20, 0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  financeText: {
-    marginLeft: 16,
-    flex: 1,
-  },
-  financeLabel: {
-    fontSize: 12,
-    color: LPColors.textGray,
-    marginBottom: 4,
-  },
-  financeValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: LPColors.text,
-  },
-  healthGrid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  healthCard: {
-    width: 110,
-    backgroundColor: LPColors.surfaceLight,
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  healthLabel: {
-    fontSize: 11,
-    color: LPColors.textGray,
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  healthValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: LPColors.primary,
-  },
-  rewardsGrid: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  rewardCard: {
-    flex: 1,
-    backgroundColor: LPColors.surfaceLight,
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
-  },
-  rewardLabel: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginTop: 8,
-  },
-  rewardSubLabel: {
-    fontSize: 10,
-    color: LPColors.textGray,
-    marginTop: 2,
-  },
-  timelineItem: {
-    flexDirection: 'row',
-    marginBottom: 24,
-    position: 'relative',
-  },
-  timelineConnect: {
-    position: 'absolute',
-    left: 15,
-    top: 32,
-    bottom: -24,
-    width: 2,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  timelineIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: LPColors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-    zIndex: 1,
-  },
-  timelineContent: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  timelineTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: LPColors.text,
-    marginBottom: 2,
-  },
-  timelineText: {
-    fontSize: 13,
-    color: LPColors.textGray,
-  },
+    container: {
+        flex: 1,
+        backgroundColor: LPColors.bg,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+    },
+    greeting: {
+        fontSize: 14,
+        color: LPColors.textGray,
+    },
+    headerTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: LPColors.text,
+        marginTop: 4,
+    },
+    streakBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: LPColors.surface,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 12,
+        gap: 6,
+        borderWidth: 1,
+        borderColor: '#FF6B6B',
+    },
+    streakText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: LPColors.text,
+    },
+    scrollView: {
+        flex: 1,
+        paddingHorizontal: 20,
+    },
+    mainStatsGrid: {
+        flexDirection: 'row',
+        gap: 12,
+        marginTop: 16,
+    },
+    mainStatCard: {
+        flex: 1,
+        borderRadius: 20,
+        padding: 20,
+        alignItems: 'center',
+        gap: 8,
+    },
+    mainStatValue: {
+        fontSize: 36,
+        fontWeight: 'bold',
+        color: '#FFF',
+    },
+    mainStatLabel: {
+        fontSize: 12,
+        color: '#FFF',
+        opacity: 0.9,
+        textAlign: 'center',
+    },
+    secondaryGrid: {
+        flexDirection: 'row',
+        gap: 12,
+        marginTop: 12,
+    },
+    secondaryCard: {
+        flex: 1,
+        backgroundColor: LPColors.surface,
+        borderRadius: 16,
+        padding: 16,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: LPColors.border,
+    },
+    secondaryIconContainer: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 8,
+    },
+    secondaryValue: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: LPColors.text,
+    },
+    secondaryLabel: {
+        fontSize: 12,
+        color: LPColors.textGray,
+        marginTop: 4,
+    },
+    chartSection: {
+        marginTop: 24,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: LPColors.text,
+        marginBottom: 12,
+    },
+    chartCard: {
+        backgroundColor: LPColors.surface,
+        borderRadius: 16,
+        padding: 20,
+        borderWidth: 1,
+        borderColor: LPColors.border,
+    },
+    chartContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-end',
+        height: 120,
+        marginBottom: 12,
+    },
+    chartBar: {
+        flex: 1,
+        alignItems: 'center',
+        gap: 4,
+    },
+    barContainer: {
+        flex: 1,
+        width: '80%',
+        justifyContent: 'flex-end',
+    },
+    bar: {
+        width: '100%',
+        borderRadius: 4,
+        minHeight: 8,
+    },
+    barLabel: {
+        fontSize: 10,
+        color: LPColors.textGray,
+    },
+    barValue: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: LPColors.text,
+    },
+    chartNote: {
+        fontSize: 12,
+        color: LPColors.textGray,
+        textAlign: 'center',
+        fontStyle: 'italic',
+    },
+    fitnessSection: {
+        marginTop: 24,
+    },
+    fitnessGrid: {
+        flexDirection: 'row',
+        gap: 12,
+    },
+    fitnessCard: {
+        flex: 1,
+        backgroundColor: LPColors.surface,
+        borderRadius: 16,
+        padding: 16,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: LPColors.border,
+        gap: 8,
+    },
+    fitnessValue: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: LPColors.text,
+    },
+    fitnessLabel: {
+        fontSize: 11,
+        color: LPColors.textGray,
+    },
+    milestonesSection: {
+        marginTop: 24,
+    },
+    milestonesCard: {
+        backgroundColor: LPColors.surface,
+        borderRadius: 16,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: LPColors.border,
+        gap: 16,
+    },
+    milestoneItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    milestoneIcon: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    milestoneInfo: {
+        flex: 1,
+    },
+    milestoneTitle: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: LPColors.text,
+    },
+    milestoneDate: {
+        fontSize: 12,
+        color: LPColors.textGray,
+        marginTop: 2,
+    },
 });
