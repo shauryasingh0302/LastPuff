@@ -1,0 +1,9 @@
+Team Name: Navjivan_abesec
+Institute: ABES Engineering College, Ghaziabad
+Team Members:
+1. Vansh Gupta - Frontend Developer
+2. Shaurya Singh - Backend Developer
+3. Vidushi Saini
+4. Mahima Joshi
+5. Aditya Mani Tripathi
+6. Aditya Dogra
