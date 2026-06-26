@@ -1,268 +1,315 @@
 # Navjivan
 
-A mobile app that helps smokers quit while building healthier habits. Think of it as your pocket health coach that actually understands what you're going through.
+**AI-Powered Smoking Cessation & Wellness Coach**
 
-## What's This About?
+Navjivan is a mobile application that helps smokers quit while building healthier habits. Instead of simply tracking streaks, the app combines AI coaching, personalized goal generation, health risk assessment, and fitness tracking to guide users toward long-term lifestyle change.
 
-Navjivan isn't just another "quit smoking" app with a counter. It combines AI-powered coaching, fitness tracking, and personalized goal generation to help people transition from smoking to a healthier lifestyle. The app learns from your behavior and adapts its recommendations—so the goals you get today are based on what actually worked for you yesterday.
+The platform learns from user behavior and continuously adapts its recommendations, ensuring that future goals are based on what has worked for the user in the past.
 
-## Core Features
+---
 
-### Smart Goal Generation
+# Features
 
-- Daily personalized goals based on your fitness level and smoking habits
-- AI learns from your completed goals and adjusts future recommendations
-- Vector database stores your progress patterns to avoid suggesting things you've failed at before
+## Personalized Goal Engine
 
-### Health Risk Assessment
+* Generates daily goals based on fitness level and smoking habits.
+* Learns from completed and failed goals to improve future recommendations.
+* Uses a vector database to store behavioral patterns and provide personalized coaching.
 
-Real-time calculation of lung cancer and stroke risk based on:
+## Health Risk Assessment
 
-- Cigarettes per day
-- Smoking triggers
-- Health conditions
-- Blood pressure and age
+Provides AI-powered estimates for smoking-related health risks based on:
 
-Uses Gemini AI to provide percentage-based risk estimates with explanations.
+* Cigarettes smoked per day
+* Smoking triggers
+* Existing health conditions
+* Blood pressure and age
 
-### Smoking Cessation Tools
+The system uses Gemini AI to generate percentage-based risk assessments along with easy-to-understand explanations.
 
-- Choose between cold turkey or gradual reduction plans
-- AI-generated motivational push notifications (every 10 minutes by default, configurable)
-- Track cigarettes avoided, money saved, and streak days
-- SOS support button for critical moments
+## Smoking Cessation Tools
 
-### Fitness Integration
+* Cold turkey and gradual reduction plans
+* Motivational AI-generated push notifications
+* Cigarettes avoided tracking
+* Money saved tracking
+* Streak monitoring
+* SOS support feature for cravings and difficult moments
 
-- BMI calculator with personalized fitness plans
-- Step tracking with real-time calorie burn
-- Sport-specific training programs (AI-generated for any sport)
-- Daily wellness goals tied to your fitness level
+## Fitness & Wellness Integration
 
-### AI Chat Coach
+* BMI calculator
+* Personalized fitness recommendations
+* Real-time step tracking and calorie estimation
+* AI-generated sport-specific training programs
+* Daily wellness goals tailored to user fitness levels
 
-Talk to an AI fitness and mental wellness coach that:
+## AI Wellness Coach
 
-- Remembers your context
-- Provides workout plans
-- Offers mental health support and stress management
-- Adapts to your communication style
+An AI-powered coach that can:
 
-## Tech Stack
+* Remember user context
+* Generate workout plans
+* Offer stress management guidance
+* Provide wellness support
+* Adapt conversations based on user preferences
 
-**Frontend** (React Native + Expo)
+---
 
-- TypeScript
-- Expo Router for navigation
-- React Native Reanimated for animations
-- Expo Notifications for push alerts
-- Context API for state management
+# Tech Stack
 
-**Backend** (Node.js + Express)
+## Frontend
 
-- MongoDB for data persistence
-- JWT authentication
-- Pinecone vector database for agentic AI
-- Gemini embeddings (768D vectors)
+* React Native
+* Expo
+* TypeScript
+* Expo Router
+* React Native Reanimated
+* Expo Notifications
+* Context API
 
-**AI Services**
+## Backend
 
-- Google Gemini (2.0 Flash) for:
-  - Text embeddings
-  - Health risk calculations
-  - Push notification generation
-- OpenRouter API for:
-  - Chat conversations
-  - Goal generation
-  - Questionnaire analysis
-  - Meal suggestions
-  - Sports training programs
+* Node.js
+* Express.js
+* MongoDB
+* JWT Authentication
+* Pinecone Vector Database
+* Gemini Embeddings (768 Dimensions)
 
-## Project Structure
+## AI Services
 
-```
+### Google Gemini (2.0 Flash)
+
+Used for:
+
+* Text embeddings
+* Health risk assessment
+* Push notification generation
+
+### OpenRouter API
+
+Used for:
+
+* Chat conversations
+* Goal generation
+* Questionnaire analysis
+* Meal suggestions
+* Sports training programs
+
+---
+
+# Project Structure
+
+```text
 Navjivan/
-├── navjivan-frontend/          # React Native app
+├── navjivan-frontend/
 │   ├── app/
-│   │   ├── (tabs)/            # Main app tabs
-│   │   ├── onboarding/        # Signup & questionnaire
-│   │   ├── fitness/           # Fitness tracking
-│   │   └── ai-coach/          # Chat interface
-│   ├── components/            # Reusable UI components
-│   ├── context/              # Global state
-│   └── services/             # API calls
+│   │   ├── (tabs)/
+│   │   ├── onboarding/
+│   │   ├── fitness/
+│   │   └── ai-coach/
+│   ├── components/
+│   ├── context/
+│   └── services/
 │
 └── navjivan-backend/
     └── express-app/
-        ├── controllers/       # Route handlers
-        ├── models/           # MongoDB schemas
-        ├── routes/           # API endpoints
-        ├── services/         # AI & vector DB logic
-        └── middlewares/      # Auth & validation
+        ├── controllers/
+        ├── models/
+        ├── routes/
+        ├── services/
+        └── middlewares/
 ```
 
-## Getting Started
+---
 
-### Prerequisites
+# Getting Started
 
-- Node.js 18+
-- MongoDB instance
-- Expo CLI (`npm install -g expo-cli`)
-- iOS Simulator or Android Emulator (or Expo Go app)
+## Prerequisites
 
-### Environment Variables
+* Node.js 18+
+* MongoDB
+* Expo CLI
 
-**Backend** (`.env` in `navjivan-backend/express-app/`)
+```bash
+npm install -g expo-cli
+```
+
+* Android Emulator, iOS Simulator, or Expo Go.
+
+---
+
+# Environment Variables
+
+## Backend (`navjivan-backend/express-app/.env`)
 
 ```env
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_jwt_secret
 
-# AI Services
 GEMINI_API_KEY=your_gemini_api_key
 OPENROUTER_API_KEY=your_openrouter_api_key
-
-# Vector DB (optional, for agentic AI features)
 PINECONE_API_KEY=your_pinecone_api_key
 ```
 
-**Frontend** (`.env` in `navjivan-frontend/`)
+## Frontend (`navjivan-frontend/.env`)
 
 ```env
 EXPO_PUBLIC_API_URL=http://localhost:5000
 ```
 
-### Installation
+---
 
-1. **Clone the repo**
+# Installation
 
-   ```bash
-   git clone https://github.com/yourusername/Navjivan.git
-   cd Navjivan
-   ```
+## 1. Clone the Repository
 
-2. **Backend setup**
+```bash
+git clone https://github.com/yourusername/Navjivan.git
+cd Navjivan
+```
 
-   ```bash
-   cd navjivan-backend/express-app
-   npm install
-   npm run dev
-   ```
+## 2. Backend Setup
 
-3. **Frontend setup** (in a new terminal)
+```bash
+cd navjivan-backend/express-app
+npm install
+npm run dev
+```
 
-   ```bash
-   cd navjivan-frontend
-   npm install
-   npm start
-   ```
+## 3. Frontend Setup
 
-4. **Run on device**
-   - Press `i` for iOS simulator
-   - Press `a` for Android emulator
-   - Or scan QR code with Expo Go app
+```bash
+cd navjivan-frontend
+npm install
+npm start
+```
 
-### Optional: Vector Database Setup
+## 4. Run on Device
 
-If you want the agentic AI features to work:
-
-1. Create a Pinecone account
-2. Create an index named `navjivan-goals` with:
-   - Dimensions: 768
-   - Metric: cosine
-3. Add your API key to backend `.env`
-
-The app works fine without this—it just won't learn from your goal completion patterns.
-
-## API Routes
-
-### Authentication
-
-- `POST /api/auth/signup` - Create account
-- `POST /api/auth/login` - Login
-
-### Dashboard
-
-- `GET /api/dashboard/summary` - Get stats, streak, health risks
-- `POST /api/dashboard/update-goals` - Update goal progress
-
-### AI Coach
-
-- `POST /api/ai-coach/chat` - Chat with AI
-- `POST /api/ai-coach/analyze-food` - Nutrition analysis
-- `POST /api/ai-coach/suggest-meal` - Smart meal suggestions
-- `POST /api/ai-coach/agentic-goals` - Generate personalized goals
-- `POST /api/ai-coach/generate-training` - Sport-specific programs
-
-### Goals
-
-- `GET /api/goals` - Fetch user goals
-- `POST /api/goals` - Create goal
-- `PATCH /api/goals/:id` - Update goal
-- `DELETE /api/goals/:id` - Delete goal
-
-## How the Agentic AI Works
-
-This is the interesting part. Most apps just generate random goals. We store every goal you complete in a vector database.
-
-When you ask for new goals:
-
-1. Your request gets embedded into a 768-dimension vector
-2. We search for similar goals you've completed successfully
-3. We also find goals you failed at (to avoid those patterns)
-4. We analyze your success rate, preferred times, difficulty levels
-5. All this context gets fed to the AI along with your current state
-6. You get 6 goals that are actually tailored to what works _for you_
-
-## Push Notifications
-
-The app sends motivational notifications using Expo's push service. The backend runs a scheduler that:
-
-- Finds all active smokers with push tokens
-- Generates unique AI messages for each person
-- Sends via Expo Push API
-- Frequency: 10 minutes (configurable in `server.js`)
-
-## Design Philosophy
-
-I wanted this to feel like a real app, not a prototype:
-
-- Dark theme with glassmorphism effects
-- Smooth animations using Reanimated
-- Haptic feedback on interactions
-- Gradient backgrounds
-- Consistent spacing and typography
-
-The UI adapts to both smokers and non-smokers—if you select "Boost My Fitness" in onboarding, you get fitness-focused screens. Pick "Quit Smoking," and you see risk stats and cessation tools.
-
-## Known Issues
-
-- Vector DB requires manual index creation in Pinecone (not automated)
-- Push notifications might not work reliably on iOS simulator (test on real device)
-- BMI calculator uses basic formula (doesn't account for muscle mass)
-- Some AI responses can be slow if OpenRouter is under load
-
-## Future Ideas
-
-- Social features (find quit buddies)
-- Reward system with redeemable points
-- Integration with Apple Health / Google Fit
-- Voice journaling for cravings
-- Community challenges
-
-## Contributing
-
-This is a personal project, but if you want to improve it, feel free to fork and submit PRs. Just keep the code clean and match the existing style.
-
-## License
-
-MIT - do whatever you want with it.
-
-## Credits
-
-Built by Shaurya as a way to combine health tech with practical AI. If this helps even one person quit smoking, it was worth it.
+* Press `i` for iOS Simulator
+* Press `a` for Android Emulator
+* Scan the QR code using Expo Go.
 
 ---
 
-**Note**: This app provides health information but isn't a substitute for medical advice. If you're struggling with addiction, please consult healthcare professionals.
+# API Routes
+
+## Authentication
+
+| Method | Endpoint           | Description    |
+| ------ | ------------------ | -------------- |
+| POST   | `/api/auth/signup` | Create account |
+| POST   | `/api/auth/login`  | Login          |
+
+## Dashboard
+
+| Method | Endpoint                      | Description          |
+| ------ | ----------------------------- | -------------------- |
+| GET    | `/api/dashboard/summary`      | Dashboard statistics |
+| POST   | `/api/dashboard/update-goals` | Update goal progress |
+
+## AI Coach
+
+| Method | Endpoint                          | Description             |
+| ------ | --------------------------------- | ----------------------- |
+| POST   | `/api/ai-coach/chat`              | Chat with AI coach      |
+| POST   | `/api/ai-coach/analyze-food`      | Nutrition analysis      |
+| POST   | `/api/ai-coach/suggest-meal`      | Meal recommendations    |
+| POST   | `/api/ai-coach/generate-goals`    | Personalized goals      |
+| POST   | `/api/ai-coach/generate-training` | Sport-specific programs |
+
+## Goals
+
+| Method | Endpoint         | Description |
+| ------ | ---------------- | ----------- |
+| GET    | `/api/goals`     | Fetch goals |
+| POST   | `/api/goals`     | Create goal |
+| PATCH  | `/api/goals/:id` | Update goal |
+| DELETE | `/api/goals/:id` | Delete goal |
+
+---
+
+# How the Personalized AI Engine Works
+
+Unlike traditional habit-tracking apps that generate generic goals, Navjivan uses a memory-augmented recommendation system.
+
+### Workflow
+
+1. User data is converted into a 768-dimensional embedding.
+2. Similar successful goals are retrieved from Pinecone.
+3. Previously failed patterns are identified and avoided.
+4. Success rates, preferences, and difficulty levels are analyzed.
+5. This context is combined with the user's current state.
+6. The AI generates personalized goals that are more likely to succeed.
+
+This approach allows the application to continuously adapt and provide recommendations that become more effective over time.
+
+---
+
+# Push Notifications
+
+The backend scheduler:
+
+* Finds active users with push tokens.
+* Generates personalized motivational messages.
+* Sends notifications through Expo Push API.
+* Notification frequency is configurable.
+
+---
+
+# Design Philosophy
+
+Navjivan was designed to feel like a production-ready wellness application.
+
+* Dark theme with glassmorphism effects
+* Smooth animations with Reanimated
+* Haptic feedback
+* Gradient-based UI
+* Adaptive experience for both smokers and fitness-focused users
+
+---
+
+# Known Issues
+
+* Pinecone index creation is manual.
+* Push notifications may not work properly on iOS simulators.
+* BMI calculations use a standard formula and do not account for muscle mass.
+* AI responses may occasionally be slower during high API load.
+
+---
+
+# Future Improvements
+
+* Social accountability and quit buddies
+* Reward and achievement system
+* Apple Health and Google Fit integration
+* Voice journaling
+* Community challenges
+* Wearable device integration
+
+---
+
+# Contributing
+
+Contributions are welcome. Feel free to fork the repository and submit pull requests while maintaining the existing code style and architecture.
+
+---
+
+# License
+
+MIT License.
+
+---
+
+# Author
+
+**Shaurya Singh**
+
+Built to combine health technology and practical AI to help users quit smoking and develop healthier lifestyles.
+
+---
+
+> **Disclaimer:** Navjivan provides health-related information and recommendations but is not a substitute for professional medical advice, diagnosis, or treatment.
